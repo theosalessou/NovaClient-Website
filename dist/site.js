@@ -1,11 +1,13 @@
 const screens = [
-{id:'menu',name:'Menu',title:'A casa do Nova.',description:'Menu preto e roxo. Jogo, demos, editor e configurações no mesmo lugar.',alt:'Menu principal do NovaClient'},
-{id:'kog',name:'KoG',title:'Seu perfil, dentro do client.',description:'Pontos, ranking, mapas concluídos e progresso por dificuldade.',alt:'Perfil KoG de yTheo com pontos, ranking e mapas concluídos'},
-{id:'maps',name:'Mapas',title:'Cada mapa que você já passou.',description:'Filtre por dificuldade, pesquise um mapa e confira seu melhor tempo.',alt:'Lista de mapas concluídos no KoG com tempos e filtros por dificuldade'},
-{id:'finish',name:'Finish cards',title:'A run acabou. O registro fica.',description:'Mapa, tempo, freezes, saves e lasts em um card salvo pelo client.',alt:'Prévia de finish card do mapa Kobra 2 no NovaClient'},
-{id:'history',name:'History',title:'O histórico não é só uma lista.',description:'Sessões e estatísticas por servidor: visitas, saves, lasts, mortes e tempo online.',alt:'Histórico de sessões do NovaClient com estatísticas por servidor'},
-{id:'smooth',name:'Smoothing',title:'Com AntiPing ou sem. Você escolhe.',description:'Configurações de suavização separadas para cada perfil de predição.',alt:'Opções de player smoothing com e sem AntiPing'},
-{id:'minimap',name:'Minimap',title:'O mapa está a um atalho.',description:'Minimap no HUD e mapa completo por tecla, mesmo com o HUD escondido.',alt:'Configurações de minimap e atalho para o mapa completo'}
+{id:'menu',name:'Menu',title:'Main menu',description:'Main menu with access to servers, demos, the editor and settings.',alt:'NovaClient main menu'},
+{id:'kog',name:'KoG',title:'KoG profile statistics',description:'Player points, ranking and completed maps.',alt:'KoG profile for yTheo showing points, ranking and completed maps'},
+{id:'map-tries',name:'Map Tries',title:'Attempts per map',description:'Total attempts for each map, across servers and sessions.',alt:'Map Tries attempt counts by map'},
+{id:'history',name:'History',title:'Session history',description:'Per-server visits, saves, lasts, deaths and online time.',alt:'NovaClient session history showing per-server statistics'},
+{id:'maps',name:'Completed maps',title:'Completed maps',description:'Completed maps with difficulty filters, search and best times.',alt:'Completed KoG maps with times and difficulty filters'},
+{id:'finish',name:'Finish cards',title:'Finish cards',description:'Map name, completion time, freezes, saves and lasts saved in a finish card.',alt:'NovaClient finish card preview for Kobra 2'},
+{id:'smooth',name:'Smoothing',title:'Player smoothing settings',description:'Separate smoothing settings for sessions with and without AntiPing.',alt:'Player smoothing options with and without AntiPing'},
+{id:'minimap',name:'Minimap',title:'Minimap settings',description:'Minimap HUD, death markers and the keyboard shortcut for the full map.',alt:'Minimap settings with minimap HUD and death markers enabled'},
+{id:'full-map',name:'Full map',title:'Full-map view',description:'Full-size map with your position and death markers.',alt:'Full-map explorer showing the map layout, player position and death markers'}
 ];
 let activeScreen=0;
 const tabs=[...document.querySelectorAll('[data-screen]')];
@@ -20,7 +22,7 @@ function selectScreen(index,focus=false){
  image.style.animation='none';requestAnimationFrame(()=>image.style.animation='');
  document.querySelector('#screen-path').textContent='novaclient / '+screen.id;
  document.querySelector('#screen-title').textContent=screen.title;document.querySelector('#screen-description').textContent=screen.description;
- const count=String(activeScreen+1).padStart(2,'0')+' / 07';document.querySelector('#screen-count').textContent=count;document.querySelector('#lightbox-count').textContent=count;
+ const count=String(activeScreen+1).padStart(2,'0')+' / '+String(screens.length).padStart(2,'0');document.querySelector('#screen-count').textContent=count;document.querySelector('#lightbox-count').textContent=count;
  document.querySelector('#lightbox-title').textContent=screen.name;const fullImage=document.querySelector('#lightbox-image');fullImage.src=image.src;fullImage.alt=image.alt;
  if(focus){tabs[activeScreen].focus({preventScroll:true});tabs[activeScreen].scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'nearest',inline:'nearest'});}
 }
@@ -54,7 +56,7 @@ let effects=!reducedMotion.matches;
 try{const preference=localStorage.getItem('nova-effects');if(preference!==null)effects=preference==='on'&&!reducedMotion.matches;}catch{}
 const effectsButton=document.querySelector('#effects-button');
 function setEffects(enabled){
- effects=enabled;document.documentElement.classList.toggle('effects-off',!enabled);effectsButton.setAttribute('aria-pressed',String(enabled));effectsButton.querySelector('span').textContent=enabled?'Efeitos ligados':'Efeitos desligados';
+ effects=enabled;document.documentElement.classList.toggle('effects-off',!enabled);effectsButton.setAttribute('aria-pressed',String(enabled));effectsButton.querySelector('span').textContent=enabled?'Effects enabled':'Effects disabled';
  try{localStorage.setItem('nova-effects',enabled?'on':'off');}catch{}
  if(enabled)startSpace();else stopSpace();
 }
@@ -72,7 +74,7 @@ function updateProgress(){const height=document.documentElement.scrollHeight-inn
 addEventListener('scroll',updateProgress,{passive:true});addEventListener('resize',updateProgress);
 let toastTimer;
 function toast(message){const element=document.querySelector('#toast');element.textContent=message;element.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>element.classList.remove('show'),2600);}
-document.querySelector('#copy-download').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(document.querySelector('[data-download]').href);toast('Link do download copiado.');}catch{toast('Não foi possível copiar. Use o botão de download.');}});
+document.querySelector('#copy-download').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(document.querySelector('[data-download]').href);toast('Download link copied.');}catch{toast('Unable to copy the link. Use the download button.');}});
 fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_page=6',{signal:AbortSignal.timeout(6000)})
 .then(response=>{if(!response.ok)throw new Error('Unavailable');return response.json();})
 .then(releases=>{
@@ -85,8 +87,8 @@ fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_pa
   if(!release.html_url.startsWith('https://github.com/theosalessou/NovaClient-Dist/releases/tag/'))return;
   const link=document.createElement('a');link.className='release-item';link.href=release.html_url;link.target='_blank';link.rel='noopener noreferrer';
   const version=document.createElement('span');version.className='release-tag';version.textContent=release.tag_name;
-  const description=document.createElement('span');description.className='release-summary';description.textContent=release.tag_name==='2.1.0-beta.36'?'Fast Input com interpolação do TClient, perfis de smoothing e ajustes de interface.':new Date(release.published_at).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'});
-  const label=document.createElement('span');label.className='release-label';label.textContent=i===0?'MAIS RECENTE':'VER RELEASE';link.append(version,description,label);list.append(link);
+  const description=document.createElement('span');description.className='release-summary';description.textContent=release.tag_name==='2.1.0-beta.36'?'TClient Fast Input interpolation, player smoothing profiles and interface changes.':new Date(release.published_at).toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'});
+  const label=document.createElement('span');label.className='release-label';label.textContent=i===0?'LATEST':'VIEW RELEASE';link.append(version,description,label);list.append(link);
  });
 }).catch(()=>{});
 // A small star field paused when the hero is outside the viewport.
