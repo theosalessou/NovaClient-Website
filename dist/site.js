@@ -87,7 +87,7 @@ fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_pa
   if(!release.html_url.startsWith('https://github.com/theosalessou/NovaClient-Dist/releases/tag/'))return;
   const link=document.createElement('a');link.className='release-item';link.href=release.html_url;link.target='_blank';link.rel='noopener noreferrer';
   const version=document.createElement('span');version.className='release-tag';version.textContent=release.tag_name;
-  const description=document.createElement('span');description.className='release-summary';description.textContent=release.tag_name==='2.1.0-beta.36'?'Fast Input reduced visual delay, player smoothing profiles, Twitch chat and notifications, and KoG, Map Tries and server browser updates.':new Date(release.published_at).toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'});
+  const description=document.createElement('span');description.className='release-summary';description.textContent=release.tag_name==='2.1.0-beta.37'?'Aspect ratio presets and custom ratios, with game-view and full-screen apply options.':release.tag_name==='2.1.0-beta.36'?'Added the TClient-style Reduced Visual Delay option for Fast Input.':new Date(release.published_at).toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'});
   const label=document.createElement('span');label.className='release-label';label.textContent=i===0?'LATEST':'VIEW RELEASE';link.append(version,description,label);list.append(link);
  });
 }).catch(()=>{});
