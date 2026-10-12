@@ -25,3 +25,6 @@ body{background:radial-gradient(ellipse at 85% 4%,#4d176330,transparent 35%),var
 .download-section{background:radial-gradient(ellipse at 0% 50%,#65308642,transparent 68%),#1d102b;border-color:#63397e}.download-layout h2{color:#f2e4ff}.download-layout>div>p,.download-meta{color:#c4a6dc}.download-meta button{color:#ddbbfb}.installation>div{border-color:#563268}.installation h3{color:#ead6fa}.installation strong{color:#ead7fc}.installation p{color:#bfa0d6}.installation>div>span,.installation .text-link{color:#c996f5}.release-row{border-color:#41264f}.release-row>span:first-child{color:#cb98fa}.site-footer{border-color:#40274f}.site-footer a:hover{color:#dbb3ff}
 @keyframes button-shine{from{transform:translateX(-25%)}to{transform:translateX(25%)}}@keyframes purple-orbit{to{transform:rotate(360deg)}}.page-hidden .hero-scene:before{animation-play-state:paused!important}
 @media(max-width:520px){.hero-scene:before{filter:blur(15px)}.primary-button{box-shadow:0 8px 25px #9747ef30}.progress-preview{box-shadow:5px 7px 0 #432256}}
+
+/* Keep the rotating glow inside the hero; it must not widen the page. */
+.hero-scene{overflow:clip;overflow-clip-margin:28px}
