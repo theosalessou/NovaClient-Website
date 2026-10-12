@@ -9,7 +9,7 @@ const screens=[
 {id:'smooth',title:'Smart Smooth',category:'gameplay',description:'Separate smoothing profiles with and without AntiPing.'},
 {id:'minimap',title:'Minimap',category:'interface',description:'Minimap HUD, death markers and a shortcut to the full map.'},
 {id:'full-map',title:'Full-map explorer',category:'gameplay',description:'Full-size map with your position and death markers.'},
-{id:'client',title:'Server browser',category:'interface',description:'Browse DDNet servers and friends through the NovaClient interface.'}
+{id:'client',title:'Server browser',category:'interface',description:'Find a server, check ping and players, then jump to friends and favorites from the same screen.'}
 ];
 const $=selector=>document.querySelector(selector);
 const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
