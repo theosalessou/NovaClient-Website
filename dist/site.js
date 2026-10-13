@@ -1,15 +1,15 @@
 'use strict';
 const screens=[
-{id:'menu',title:'Main menu',category:'interface',description:'Servers, demos, the editor and settings, all in one place.'},
+{id:'menu',title:'Main menu',category:'interface',description:'Open the server browser, demos, map editor or settings.'},
 {id:'kog',title:'KoG profile',category:'stats',description:'Player points, ranking and completed maps.'},
 {id:'map-tries',title:'Map Tries',category:'stats',description:'Attempts per map, across servers and sessions.'},
 {id:'history',title:'Session history',category:'stats',description:'Per-server visits, saves, lasts, deaths and online time.'},
 {id:'maps',title:'Completed maps',category:'stats',description:'Completed KoG maps with difficulty filters, search and best times.'},
 {id:'finish',title:'Finish cards',category:'stats',description:'Map name, completion time, freezes, saves and lasts saved at the finish.'},
-{id:'smooth',title:'Smart Smooth',category:'gameplay',description:'Separate smoothing profiles with and without AntiPing.'},
+{id:'smooth',title:'AntiPing smoothing',category:'gameplay',description:'Smooths prediction corrections, with less visual delay near collisions and hooks. Requires AntiPing player prediction.'},
 {id:'minimap',title:'Minimap',category:'interface',description:'Minimap HUD, death markers and a shortcut to the full map.'},
 {id:'full-map',title:'Full-map explorer',category:'gameplay',description:'Full-size map with your position and death markers.'},
-{id:'client',title:'Server browser',category:'interface',description:'Find a server, check ping and players, then jump to friends and favorites from the same screen.'}
+{id:'client',title:'Server browser',category:'interface',description:'Browse servers by ping and player count, or open your friends and favorites.'}
 ];
 const $=selector=>document.querySelector(selector);
 const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
@@ -25,7 +25,7 @@ function renderGallery(){
   const frame=document.createElement('div');frame.className='gallery-image';const image=document.createElement('img');image.src='assets/'+screen.id+'.png';image.alt=screen.title;image.loading='lazy';image.width=1919;image.height=1079;frame.append(image);
   const caption=document.createElement('span');caption.className='gallery-caption';const name=document.createElement('span');name.textContent=screen.title;const category=document.createElement('small');category.textContent={stats:'Statistics',gameplay:'Gameplay',interface:'Interface'}[screen.category];name.append(category);const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');caption.append(name,arrow);button.append(frame,caption);return button;
  }));
- $('#result-count').textContent=results.length+' '+(results.length===1?'feature':'features')+' to explore';$('#no-results').hidden=results.length!==0;
+ $('#result-count').textContent=results.length+' '+(results.length===1?'feature':'features')+' found';$('#no-results').hidden=results.length!==0;
 }
 document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{filter=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));renderGallery();}));
 $('#feature-search').addEventListener('input',renderGallery);
@@ -38,7 +38,7 @@ $('#close-dialog').addEventListener('click',()=>dialog.close());$('#dialog-prev'
 const progressTabs=[...document.querySelectorAll('[data-progress]')];
 function selectProgress(tab,focus=false){const screen=screens.find(item=>item.id===tab.dataset.progress);progressTabs.forEach(item=>{item.setAttribute('aria-selected',String(item===tab));item.tabIndex=item===tab?0:-1;});$('#progress-panel').setAttribute('aria-labelledby',tab.id);$('#progress-image').src='assets/'+screen.id+'.png';$('#progress-image').alt=screen.title;$('#progress-description').textContent=screen.description;$('#open-progress').dataset.openScreen=screen.id;if(focus)tab.focus();}
 progressTabs.forEach((tab,index)=>{tab.addEventListener('click',()=>selectProgress(tab));tab.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight')next=(index+1)%progressTabs.length;if(event.key==='ArrowLeft')next=(index-1+progressTabs.length)%progressTabs.length;if(event.key==='Home')next=0;if(event.key==='End')next=progressTabs.length-1;if(next!==undefined){event.preventDefault();selectProgress(progressTabs[next],true);}});});
-$('#input-mode').addEventListener('change',event=>{$('#mode-description').textContent=event.target.value+' — configurable prediction amount and other-player behavior. Compare mode-specific options in the client.';});
+$('#input-mode').addEventListener('change',event=>{$('#mode-description').textContent=event.target.value+' — adjust the prediction amount and whether it applies to other players in Nova settings.';});
 const stage=$('#lab-stage');const widgets=[...document.querySelectorAll('.hud-panel')];let scale=1;
 const widgetControls={'map-widget':'hud-minimap','stats-widget':'hud-stats','finish-widget':'hud-finish'};
 function clampWidget(widget,x,y){const maxX=Math.max(8,stage.clientWidth-widget.offsetWidth*scale-8),maxY=Math.max(48,stage.clientHeight-widget.offsetHeight*scale-42);widget.style.left=Math.max(8,Math.min(x,maxX))+'px';widget.style.top=Math.max(48,Math.min(y,maxY))+'px';widget.style.right='auto';}
@@ -76,8 +76,8 @@ fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_pa
  const validAsset=asset=>/^NovaClient-.*-win64\.zip$/.test(asset.name)&&asset.browser_download_url?.startsWith(releaseOrigin+'download/');
  const available=releases.filter(release=>!release.draft&&typeof release.html_url==='string'&&release.html_url.startsWith(releaseOrigin+'tag/')&&Array.isArray(release.assets)&&release.assets.some(validAsset));if(!available.length)throw new Error('No package found');available.sort((a,b)=>Date.parse(b.published_at)-Date.parse(a.published_at));
  const latest=available[0],asset=latest.assets.find(validAsset);$('[data-download]').href=asset.browser_download_url;document.querySelectorAll('[data-version]').forEach(element=>element.textContent=latest.tag_name);
- $('#release-list').replaceChildren(...available.slice(0,3).map((release,index)=>{const link=document.createElement('a');link.className='release-row';link.href=release.html_url;const tag=document.createElement('span');tag.textContent=release.tag_name;const description=document.createElement('span');const date=new Date(release.published_at);description.textContent=(index===0?'Latest release':'Previous release')+(Number.isFinite(date.getTime())?' · '+new Intl.DateTimeFormat('en',{dateStyle:'medium'}).format(date):'');const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');link.append(tag,description,arrow);return link;}));$('#release-status').textContent='Release information fetched from the official NovaClient repository.';
-}).catch(()=>{$('#release-status').textContent='Live release information is unavailable. The last verified download is still available; check GitHub for newer releases.';});
+ $('#release-list').replaceChildren(...available.slice(0,3).map((release,index)=>{const link=document.createElement('a');link.className='release-row';link.href=release.html_url;const tag=document.createElement('span');tag.textContent=release.tag_name;const description=document.createElement('span');const date=new Date(release.published_at);description.textContent=(index===0?'Latest release':'Previous release')+(Number.isFinite(date.getTime())?' · '+new Intl.DateTimeFormat('en',{dateStyle:'medium'}).format(date):'');const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');link.append(tag,description,arrow);return link;}));$('#release-status').textContent='Up to date with GitHub releases.';
+}).catch(()=>{$('#release-status').textContent='Couldn\'t check for updates. You can use the download above or check releases on GitHub.';});
 
 // Pointer lights have no idle animation loop.
 const heroLight=document.querySelector('.hero');let lightFrame=0;
