@@ -85,7 +85,8 @@ download.addEventListener('pointermove', e => {
 }, { passive: true });
 $$('details').forEach(el => el.addEventListener('toggle', () => {
   if (!el.open) return;
-  $$('details').forEach(other => { if (other !== el) other.open = false; });
+  const group = el.closest('[data-accordion-group]');
+  if (group) group.querySelectorAll('details').forEach(other => { if (other !== el) other.open = false; });
   schedule();
 }));
 const releaseBase = 'https://github.com/theosalessou/NovaClient-Dist/releases/';
