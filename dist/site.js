@@ -1,25 +1,108 @@
 (() => {
 'use strict';
-const $=(q,r=document)=>r.querySelector(q), $$=(q,r=document)=>[...r.querySelectorAll(q)];
-const reduced=matchMedia('(prefers-reduced-motion: reduce)');let motion=!reduced.matches;
-const state=window.novaState={motion,tab:'movement',smoothing:60,color:'#8c5cc7',hook:false,replay:0};
-const announce=()=>dispatchEvent(new CustomEvent('nova:change',{detail:state}));
-function syncMotion(){state.motion=motion;document.documentElement.classList.toggle('motion-off',!motion);const b=$('.motion-toggle');b.setAttribute('aria-pressed',String(motion));b.setAttribute('aria-label',motion?'Pause animations':'Enable animations');$('.motion-symbol').textContent=motion?'Ⅱ':'▷';$('.rpc-art').src=motion?'assets/nova-rpc.gif':'assets/rpc-poster.png';announce();}
-$('.motion-toggle').addEventListener('click',()=>{motion=!motion;syncMotion();});reduced.addEventListener('change',e=>{motion=!e.matches;syncMotion();});syncMotion();
-const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('entered');observer.unobserve(e.target);}}),{threshold:.12});$$('.reveal').forEach(e=>observer.observe(e));
-function selectTab(name,focus=false){state.tab=name;$$('[data-tab]').forEach(b=>{const selected=b.dataset.tab===name;b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1;$('#panel-'+b.dataset.tab).hidden=!selected;if(selected&&focus)b.focus();});announce();}
-$$('[data-tab]').forEach((b,i,tabs)=>{b.addEventListener('click',()=>selectTab(b.dataset.tab));b.addEventListener('keydown',e=>{if(!['ArrowDown','ArrowRight','ArrowUp','ArrowLeft','Home','End'].includes(e.key))return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(['ArrowDown','ArrowRight'].includes(e.key)?1:-1)+tabs.length)%tabs.length;selectTab(tabs[next].dataset.tab,true);});});
-$('#smoothing').addEventListener('input',e=>{state.smoothing=Number(e.target.value);$('#smoothing-value').textContent=state.smoothing+' ms';announce();});$('#movement-replay').addEventListener('click',()=>{state.replay++;announce();});
-$('#nickname').addEventListener('input',e=>$('#tee-name').textContent=e.target.value.trim()||'Nova');$$('.swatch').forEach(b=>b.addEventListener('click',()=>{state.color=b.dataset.color;$$('.swatch').forEach(other=>other.setAttribute('aria-pressed',String(other===b)));announce();}));
-$('#practice-hook').addEventListener('click',e=>{state.hook=!state.hook;const b=e.currentTarget;b.setAttribute('aria-pressed',String(state.hook));b.firstChild.textContent=state.hook?'Release hook ':'Launch hook ';announce();});$('#orbit-reset').addEventListener('click',()=>dispatchEvent(new Event('nova:orbit')));
-const field=$('#hud-playfield');let drag=null;function movePiece(p,x,y){p.style.left=Math.max(0,Math.min(field.clientWidth-p.offsetWidth,x))+'px';p.style.top=Math.max(0,Math.min(field.clientHeight-p.offsetHeight,y))+'px';p.style.right='auto';p.style.bottom='auto';}
-$$('.hud-piece').forEach(p=>{p.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();p.focus();drag={p,x:e.clientX,y:e.clientY,left:p.offsetLeft,top:p.offsetTop};p.setPointerCapture(e.pointerId);});p.addEventListener('pointermove',e=>{if(drag?.p===p)movePiece(p,drag.left+e.clientX-drag.x,drag.top+e.clientY-drag.y);});p.addEventListener('pointerup',()=>drag=null);p.addEventListener('pointercancel',()=>drag=null);p.addEventListener('keydown',e=>{const m={ArrowLeft:[-8,0],ArrowRight:[8,0],ArrowUp:[0,-8],ArrowDown:[0,8]};if(!m[e.key])return;e.preventDefault();movePiece(p,p.offsetLeft+m[e.key][0],p.offsetTop+m[e.key][1]);});});
-$$('[data-widget]').forEach(i=>i.addEventListener('change',()=>{$('[data-piece="'+i.dataset.widget+'"]').hidden=!i.checked;}));$('#hud-reset').addEventListener('click',()=>{$$('.hud-piece').forEach(p=>{p.removeAttribute('style');p.hidden=false;});$$('[data-widget]').forEach(i=>i.checked=true);});new ResizeObserver(()=>{$$('.hud-piece').filter(p=>p.style.left).forEach(p=>movePiece(p,p.offsetLeft,p.offsetTop));}).observe(field);
-$('#chat-replay').addEventListener('click',()=>{$$('.chat-message').forEach((m,i)=>{m.getAnimations().forEach(a=>a.cancel());if(motion)m.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:450,delay:i*180,fill:'backwards',easing:'cubic-bezier(.16,1,.3,1)'});});});
-const started=Date.now(),presence=$('#presence-switch');presence.addEventListener('change',()=>{$('.rpc-stage').classList.toggle('off',!presence.checked);$('#rpc-state').textContent=presence.checked?'Playing DDNet':'Activity hidden';$('#rpc-detail').textContent=presence.checked?'On a new run':'Choose when to show up';$('#rpc-clock').hidden=!presence.checked;});
-setInterval(()=>{if(!motion||document.hidden||!presence.checked)return;const s=Math.floor((Date.now()-started)/1000);$('#rpc-clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},1000);
-const origin='https://github.com/theosalessou/NovaClient-Dist/releases/';
-fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_page=8',{signal:AbortSignal.timeout(7000)}).then(r=>{if(!r.ok)throw Error();return r.json();}).then(releases=>{const asset=r=>r.assets?.find(a=>/^NovaClient-.*-win64\.zip$/i.test(a.name)&&a.browser_download_url?.startsWith(origin+'download/'));const r=releases.filter(r=>!r.draft&&r.html_url?.startsWith(origin+'tag/')&&asset(r)).sort((a,b)=>Date.parse(b.published_at)-Date.parse(a.published_at))[0];if(!r)throw Error();$('[data-download]').href=asset(r).browser_download_url;$('#release-status').textContent=r.tag_name+' · Windows x64';}).catch(()=>$('#release-status').textContent='Choose a version on the official releases page');
-$('#copy-download').addEventListener('click',async()=>{const b=$('#copy-download');try{await navigator.clipboard.writeText($('[data-download]').href);b.textContent='Link copied';}catch{b.textContent='Use the download button';}setTimeout(()=>b.textContent='Copy link',2500);});
-const dialog=$('#credits-dialog');$('#credits-open').addEventListener('click',()=>{dialog.showModal();document.body.classList.add('dialog-open');});dialog.addEventListener('close',()=>document.body.classList.remove('dialog-open'));dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+const $ = (s, root = document) => root.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const root = document.documentElement;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+let motion = !reduced.matches, frame = 0, pointerActive = false;
+let targetX = innerWidth / 2, targetY = innerHeight / 2, lightX = targetX, lightY = targetY;
+const hero = $('.hero'), wordmark = $('.wordmark-wrap'), light = $('.pointer-light');
+const progress = $('.reading-progress'), download = $('.download');
+function schedule() { if (!frame && !document.hidden) frame = requestAnimationFrame(render); }
+function render() {
+  frame = 0;
+  const scrollable = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  progress.style.transform = `scaleX(${Math.min(1, Math.max(0, scrollY / scrollable))})`;
+  if (!motion) return;
+  const heroBottom = hero.getBoundingClientRect().bottom;
+  if (heroBottom > 0) wordmark.style.setProperty('--word-y', `${Math.min(scrollY * .055, 28)}px`);
+  if (pointerActive && finePointer.matches) {
+    lightX += (targetX - lightX) * .09;
+    lightY += (targetY - lightY) * .09;
+    light.style.transform = `translate3d(${lightX - 230}px,${lightY - 230}px,0)`;
+    if (Math.abs(targetX - lightX) + Math.abs(targetY - lightY) > .3) schedule();
+  }
+}
+function syncMotion() {
+  root.classList.toggle('motion-off', !motion);
+  const button = $('.motion-toggle');
+  button.setAttribute('aria-pressed', String(motion));
+  button.setAttribute('aria-label', motion ? 'Pause animations' : 'Enable animations');
+  $('.motion-symbol').textContent = motion ? 'Ⅱ' : '▷';
+  if (!motion) {
+    document.getAnimations().forEach(a => a.cancel());
+    $$('.magnetic').forEach(el => el.style.removeProperty('transform'));
+    wordmark.style.removeProperty('--word-y');
+  }
+  schedule();
+}
+$('.motion-toggle').addEventListener('click', () => { motion = !motion; syncMotion(); });
+reduced.addEventListener('change', e => { motion = !e.matches; syncMotion(); });
+syncMotion();
+// Animate the already-visible content; script failure never conceals information.
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const el = entry.target;
+    observer.unobserve(el);
+    const siblings = [...el.parentElement.children];
+    const delay = Math.min(siblings.indexOf(el), 3) * 75;
+    if (motion) {
+      el.style.setProperty('--entrance-delay', `${delay}ms`);
+      el.classList.add('entered');
+    }
+  });
+}, { threshold: .12 });
+$$('.reveal').forEach(el => observer.observe(el));
+$$('#hero-title span').forEach((el, i) => el.style.setProperty('--letter-delay', `${i * 28}ms`));
+if (motion) $('#hero-title').classList.add('wordmark-live');
+addEventListener('scroll', schedule, { passive: true });
+addEventListener('resize', schedule, { passive: true });
+addEventListener('pointermove', e => {
+  if (!motion || !finePointer.matches) return;
+  pointerActive = true;
+  targetX = e.clientX; targetY = e.clientY;
+  root.classList.add('pointer-present');
+  schedule();
+}, { passive: true });
+document.addEventListener('pointerleave', () => { pointerActive = false; root.classList.remove('pointer-present'); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelAnimationFrame(frame); frame = 0; }
+  else schedule();
+});
+$$('.magnetic').forEach(el => {
+  el.addEventListener('pointermove', e => {
+    if (!motion || !finePointer.matches) return;
+    const r = el.getBoundingClientRect();
+    el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .045}px,${(e.clientY - r.top - r.height / 2) * .12}px)`;
+  });
+  const reset = () => el.style.removeProperty('transform');
+  el.addEventListener('pointerleave', reset); el.addEventListener('blur', reset);
+});
+download.addEventListener('pointermove', e => {
+  if (motion && finePointer.matches) download.style.setProperty('--download-x', `${(e.clientX / innerWidth - .5) * 120}px`);
+}, { passive: true });
+$$('details').forEach(el => el.addEventListener('toggle', () => {
+  if (!el.open) return;
+  $$('details').forEach(other => { if (other !== el) other.open = false; });
+  schedule();
+}));
+const releaseBase = 'https://github.com/theosalessou/NovaClient-Dist/releases/';
+fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_page=8', { signal: AbortSignal.timeout(7000) })
+  .then(r => { if (!r.ok) throw Error(); return r.json(); })
+  .then(releases => {
+    const asset = r => r.assets?.find(a => /^NovaClient-.*-win64\.zip$/i.test(a.name) && a.browser_download_url?.startsWith(releaseBase + 'download/'));
+    const release = releases.filter(r => !r.draft && r.html_url?.startsWith(releaseBase + 'tag/') && asset(r)).sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))[0];
+    if (!release) throw Error();
+    $('[data-download]').href = asset(release).browser_download_url;
+    $('#release-status').textContent = release.tag_name + ' · Windows x64';
+  })
+  .catch(() => { $('#release-status').textContent = 'Choose a version on the official releases page'; });
+$('#copy-download').addEventListener('click', async () => {
+  const button = $('#copy-download');
+  try { await navigator.clipboard.writeText($('[data-download]').href); button.textContent = 'Link copied'; }
+  catch { button.textContent = 'Use the download link'; }
+  setTimeout(() => { button.textContent = 'Copy link'; }, 2500);
+});
 })();
