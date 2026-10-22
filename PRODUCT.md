@@ -1,0 +1,5 @@
+# NovaClient website
+
+Public English-language presentation and download site plus a Discord-authenticated player account. Players prove an active PC-bound license using a temporary Diagnostics code, then choose their primary nickname through the same linking routine as the Discord bot. Profiles show real client-recorded stats, effective license role and assigned custom title. Public leaderboards show recorded totals; these are not official KoG rankings. Preserve black/purple identity, reduced-motion support, official distribution links and existing feature truth. No activation keys, device proofs or private credentials are public.
+
+All visible account and leaderboard pages are hosted by GitHub Pages under /NovaClient-Website/account/. Only API and OAuth callback run on the license server. OAuth returns a one-use 90-second exchange code in a fragment; the Pages frontend exchanges it over HTTPS for a one-hour session in sessionStorage. CORS permits only the exact GitHub Pages origin. No session token is placed in a URL.

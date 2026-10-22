@@ -25,3 +25,10 @@ Reviewed 2026-10-22 against the local client source. No codebase-memory connecto
 GetLayers (https://www.getlayers.ai/docs), React Bits (https://reactbits.dev), 21st (https://21st.dev), Uiverse (https://uiverse.io), Spell (https://spell.sh), Alche (https://alche.studio), BestClient (https://bestclient.fun). Aether is provisionally interpreted as Aether/UI (https://aetherui.in); the direct page returned 403 during research.
 
 Original native CSS/JS implementation inspired by the references, without copying their component source. Existing static deployment is preserved. Motion intensity 6, density 4, variance 8; user-requested purple, glows and text-first presentation override skill defaults. Decorative rings are abstract illumination, not feature demonstrations. No new runtime dependencies.
+
+## Player website account
+- Discord identify login uses the existing server-only OAuth integration: `services/novaclient-licenses/premium.py`, `novaclient_licenses.py`.
+- Temporary, device-bound website proof is emitted only after signed v2 validation. One-use codes expire after ten minutes and are stored hashed: `website_accounts.py`; client button in `menus_novaclient.cpp` Diagnostics and signed response consumption in `license.cpp`.
+- Main nickname linking calls `Store.link_player`, the same routine used by Discord `/link`; it does not prove KoG nickname ownership.
+- Profiles use gameplay_stats, gameplay_map_tries, the effective license role and dashboard title assignment. Title glyph colors, RGB, wave and pulse follow `CKoGStats::RenderTitle` in `kog_stats.cpp`.
+- Leaderboards show client-recorded totals (playtime, tries, saves, freezes, lasts, deaths), not official KoG ranking: `Store.leaderboard`.
