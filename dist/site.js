@@ -90,6 +90,41 @@ $$('details').forEach(el => el.addEventListener('toggle', () => {
   schedule();
 }));
 const releaseBase = 'https://github.com/theosalessou/NovaClient-Dist/releases/';
+// Progressive enhancement: the complete catalogue remains readable without JS.
+const search = $('#tool-search');
+const featureRows = $$('.tool-grid li');
+let category = 'All';
+$('.tool-controls').hidden = false;
+function filterTools() {
+  const query = search.value.trim().toLocaleLowerCase('en');
+  let count = 0;
+  featureRows.forEach(row => {
+    const match = (category === 'All' || row.dataset.category === category) && row.textContent.toLocaleLowerCase('en').includes(query);
+    row.hidden = !match;
+    if (match) count++;
+  });
+  $('#tool-count').textContent = `${count} ${count === 1 ? 'feature' : 'features'}`;
+  $('#tool-empty').hidden = count !== 0;
+  schedule();
+}
+search.addEventListener('input', filterTools);
+$$('[data-filter]').forEach(button => button.addEventListener('click', () => {
+  category = button.dataset.filter;
+  $$('[data-filter]').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+  filterTools();
+}));
+filterTools();
+const journeyLinks = $$('.journey a');
+const sectionObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    journeyLinks.forEach(link => {
+      if (link.hash === '#' + entry.target.id) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+  });
+}, { rootMargin: '-10% 0px -55% 0px' });
+['inputs', 'features', 'download'].forEach(id => sectionObserver.observe(document.getElementById(id)));
 fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_page=8', { signal: AbortSignal.timeout(7000) })
   .then(r => { if (!r.ok) throw Error(); return r.json(); })
   .then(releases => {
