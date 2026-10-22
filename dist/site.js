@@ -136,4 +136,15 @@ $('#copy-download').addEventListener('click', async () => {
   catch { button.textContent = 'Use the download link'; }
   setTimeout(() => { button.textContent = 'Copy link'; }, 2500);
 });
+const pixButton = document.getElementById('copy-pix');
+if (pixButton) pixButton.addEventListener('click', async () => {
+  const field = document.getElementById('pix-code');
+  try {
+    await navigator.clipboard.writeText(field.value);
+    document.getElementById('pix-status').textContent = 'Pix code copied. Open your banking app and choose Pix copy and paste.';
+  } catch {
+    field.focus(); field.select();
+    document.getElementById('pix-status').textContent = 'Select and copy the Pix code above.';
+  }
+});
 })();
