@@ -7,7 +7,7 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 let motion = !reduced.matches, frame = 0, pointerActive = false;
 let targetX = innerWidth / 2, targetY = innerHeight / 2, lightX = targetX, lightY = targetY;
-const hero = $('.hero'), wordmark = $('.wordmark-wrap'), light = $('.pointer-light');
+const hero = $('.hero'), wordmark = $('#hero-title'), light = $('.pointer-light');
 const progress = $('.reading-progress'), download = $('.download');
 function schedule() { if (!frame && !document.hidden) frame = requestAnimationFrame(render); }
 function render() {

@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NovaClient — Your game. Your rhythm.</title>
+<title>NovaClient — Find your own orbit.</title>
 <meta name="description" content="NovaClient is an independent DDNet client built on DDNet and TClient. Make the game feel like your own. Download for Windows x64.">
 <meta name="theme-color" content="#060509"><meta property="og:title" content="NovaClient — Your game. Your rhythm."><meta property="og:description" content="An independent DDNet client. Made to feel like you."><meta property="og:type" content="website"><meta property="og:image" content="https://theosalessou.github.io/NovaClient-Website/assets/icon.png">
-<link rel="icon" href="assets/icon.png"><link rel="preload" href="assets/manrope.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="style.css"><script src="site.js" defer></script>
+<link rel="icon" href="assets/icon.png"><link rel="preload" href="assets/manrope.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="style.css"><script src="site.js" defer></script><script type="module" src="nova-scene.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#about">Skip to content</a>
@@ -18,13 +18,15 @@
 </header>
 <main>
 <section class="hero frame" id="home" aria-labelledby="hero-title">
-<div class="hero-intro"><p class="hero-thought reveal">Your game.<br>Your rhythm.</p><p class="hero-definition reveal">An independent DDNet client.<br>Practice. Connect. Make it yours.</p></div>
-<div class="hero-orbit" aria-hidden="true"><i></i><i></i><i></i></div><div class="wordmark-wrap"><h1 id="hero-title" aria-label="NovaClient"><span>N</span><span>o</span><span>v</span><span>a</span><span>C</span><span>l</span><span>i</span><span>e</span><span>n</span><span>t</span></h1></div>
-<div class="hero-bottom"><p class="reveal">The same world you know.<br>More room to make it yours.</p><a class="button magnetic reveal" href="#download"><span>Download for Windows</span><span class="arrow" aria-hidden="true">↗</span></a><a class="scroll-link reveal" href="#about">Keep going <span aria-hidden="true">↓</span></a></div>
+<div class="scene-wrap"><canvas id="nova-scene" aria-label="Interactive glossy 3D NovaClient emblem. Drag to rotate." role="img"></canvas><img class="scene-fallback" src="assets/icon.png" alt="NovaClient emblem"><div class="scene-vignette"></div></div>
+<div class="hero-topline"><p>Independent DDNet client</p><p>Built for the way you play.</p></div>
+<h1 id="hero-title">Find your<br><em>own orbit.</em></h1>
+<div class="hero-bottom"><p>More control. More connection.<br>A whole new feeling.</p><a class="button magnetic" href="#download">Get NovaClient <span class="arrow" aria-hidden="true">↗</span></a><p class="scene-hint">Drag the emblem to explore <span aria-hidden="true">↔</span></p></div>
+<a class="hero-explore" href="#about">Explore the client <span aria-hidden="true">↓</span></a>
 </section>
 <nav class="journey frame" aria-label="Explore NovaClient"><a href="#inputs"><strong>12</strong> input modes <span aria-hidden="true">↗</span></a><a href="#features"><strong>30+</strong> advanced features <span aria-hidden="true">↗</span></a><a href="#download"><strong>One</strong> client. Your setup. <span aria-hidden="true">↗</span></a></nav>
 <section class="about frame" id="about" aria-labelledby="about-title">
-<h2 id="about-title" class="reveal">Same game.<br>Your own way.</h2>
+<h2 id="about-title" class="reveal">A familiar world.<br>An entirely<br><em>different feeling.</em></h2>
 <div class="about-copy"><p class="reading-copy reveal">Built on DDNet and TClient. Ready for another run.</p><p class="reveal">Make the experience your own: adjust how movement feels, arrange the interface around the way you play and give your tee its own identity. Your settings live in the client, ready for the next time you join.</p><p class="reveal">Play on DDNet-compatible servers. Find your duo. Take another attempt. Let the game feel like home.</p><a class="text-link reveal" href="#download">Meet you in game <span aria-hidden="true">↗</span></a></div>
 </section>
 <section class="input-story frame" id="inputs" aria-labelledby="inputs-title">
