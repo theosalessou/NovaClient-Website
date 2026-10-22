@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const API='https://novaclient.137-131-212-78.sslip.io/license/account';
+const API='https://api.novaclient.tech/license/account';
 const account=document.querySelector('#header-account'),logout=document.querySelector('#logout');
 if(!account||!logout)return;
 if(!localStorage.getItem('nova-session')&&sessionStorage.getItem('nova-session'))localStorage.setItem('nova-session',sessionStorage.getItem('nova-session'));
