@@ -32,3 +32,9 @@ Original native CSS/JS implementation inspired by the references, without copyin
 - Main nickname linking calls `Store.link_player`, the same routine used by Discord `/link`; it does not prove KoG nickname ownership.
 - Profiles use gameplay_stats, gameplay_map_tries, the effective license role and dashboard title assignment. Title glyph colors, RGB, wave and pulse follow `CKoGStats::RenderTitle` in `kog_stats.cpp`.
 - Leaderboards show client-recorded totals (playtime, tries, saves, freezes, lasts, deaths), not official KoG ranking: `Store.leaderboard`.
+
+## Shared player titles and public profiles
+- Current title selection: `services/novaclient-licenses/novaclient_licenses.py` signed presence, `licenses.selected_title`.
+- Earned catalog: `src/game/client/components/kog_stats_data.cpp`; generated website catalog at `services/novaclient-licenses/earned_titles.json` (regenerate after catalog changes).
+- Per-letter gradient/RGB/wave/pulse formulas: `src/game/client/components/kog_stats.cpp`, mirrored in `dist/titles.js`.
+- Public profile allowlist, opaque identifiers and assignment validation: `services/novaclient-licenses/website_accounts.py`. No private license or device metadata is public.

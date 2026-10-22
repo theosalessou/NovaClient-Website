@@ -2,6 +2,8 @@
 const API='https://api.novaclient.tech/license/account';
 const account=document.querySelector('#header-account'),logout=document.querySelector('#logout');
 if(!account||!logout)return;
+account.href='/account/';
+let requestNumber=0;
 if(!localStorage.getItem('nova-session')&&sessionStorage.getItem('nova-session'))localStorage.setItem('nova-session',sessionStorage.getItem('nova-session'));
 function render(state){
  const signed=state.authenticated===true||Object.hasOwn(state,'csrf');
@@ -14,8 +16,9 @@ function render(state){
  if(state.profile?.role){const role=document.createElement('span');role.className='header-player-role';role.textContent=state.profile.role;account.append(role)}
  account.setAttribute('aria-label','Open profile: '+name.textContent);
 }
-async function identity(){const token=localStorage.getItem('nova-session');if(!token){render({});return}try{
- const response=await fetch(API+'/identity',{credentials:'omit',headers:{Authorization:'Bearer '+token}});
+async function identity(){const ticket=++requestNumber,token=localStorage.getItem('nova-session');if(!token){render({});return}account.textContent='Your account';account.classList.add('is-connected');try{
+ const response=await fetch(API+'/identity',{cache:'no-store',credentials:'omit',headers:{Authorization:'Bearer '+token}});
+ if(ticket!==requestNumber||localStorage.getItem('nova-session')!==token)return;
  if(response.status===401){localStorage.removeItem('nova-session');sessionStorage.removeItem('nova-session');render({});return}
  if(!response.ok)throw new Error('temporarily unavailable');render(await response.json());
 }catch{account.textContent='My profile';account.setAttribute('aria-label','Open my profile');logout.hidden=false}}
@@ -23,8 +26,9 @@ logout.addEventListener('click',async()=>{logout.disabled=true;try{
  const token=localStorage.getItem('nova-session');if(token){const headers={Authorization:'Bearer '+token};const state=await fetch(API+'/state',{credentials:'omit',headers});if(state.ok){const data=await state.json();const result=await fetch(API+'/logout',{method:'POST',credentials:'omit',headers:{...headers,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({csrf:data.csrf})});if(!result.ok)throw new Error('Sign out failed')}}
  localStorage.removeItem('nova-session');sessionStorage.removeItem('nova-session');location.reload();
 }catch{logout.disabled=false;logout.title='Could not sign out. Try again.'}});
-document.addEventListener('nova-account-state',event=>render(event.detail));
+document.addEventListener('nova-account-state',event=>{requestNumber++;render(event.detail)});
 window.addEventListener('storage',event=>{if(event.key==='nova-session')identity()});
+document.addEventListener('nova-session-changed',identity);
 window.addEventListener('pageshow',identity);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)identity()});
 for(const link of document.querySelectorAll('.site-header .icon-nav a')){const url=new URL(link.href);if(!url.hash&&url.pathname.replace(/\/$/,'')===location.pathname.replace(/\/$/,''))link.setAttribute('aria-current','page')}

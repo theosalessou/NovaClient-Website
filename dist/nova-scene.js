@@ -28,17 +28,17 @@ const storyObserver=new IntersectionObserver(entries=>{for(const e of entries)if
 document.querySelectorAll('[data-scene]').forEach(el=>storyObserver.observe(el));
 document.querySelectorAll('a,button,.input-modes li').forEach(el=>el.addEventListener('pointerenter',()=>{targetY+=.14}));
 let targetX=.12,targetY=-.3,rx=.12,ry=-.3,drag=false,lastX=0,lastY=0,raf=0;
-function resize(){const r=canvas.parentElement.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.position.z=r.width<650?17:14;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(canvas.parentElement);resize();
+function resize(){const r=canvas.parentElement.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.position.z=Math.max(10.5,10.5/camera.aspect);camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(canvas.parentElement);resize();
 canvas.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')});
 canvas.addEventListener('pointermove',e=>{if(reduce.matches)return;if(drag){targetY+=(e.clientX-lastX)*.008;targetX+=(e.clientY-lastY)*.006;lastX=e.clientX;lastY=e.clientY}else{targetY=(e.offsetX/canvas.clientWidth-.5)*.65;targetX=(e.offsetY/canvas.clientHeight-.5)*.35}});
 canvas.addEventListener('pointerup',()=>{drag=false;canvas.classList.remove('dragging')});canvas.addEventListener('pointercancel',()=>{drag=false});
 function draw(t){raf=requestAnimationFrame(draw);if(document.hidden)return;const motion=!reduce.matches&&!document.documentElement.classList.contains('motion-off');if(motion){rx+=(targetX-rx)*.055;ry+=(targetY-ry)*.055;const scroll=scrollY/innerHeight;const travel=Math.min(1,scroll);
 group.rotation.set(rx+Math.sin(t*.0003)*.08,ry+scroll*.35,-.18+Math.sin(scroll)*.2);
 group.position.y=Math.sin(t*.00065)*.14;
-group.position.x=canvas.clientWidth>800?1.45-Math.sin(scroll*1.2)*2:0;
-group.scale.setScalar(1-travel*.58);material.color.lerp(targetColor,.035);
+group.position.x=0;
+group.scale.setScalar(1);material.color.lerp(targetColor,.035);
 ring.rotation.z=-.65+Math.sin(t*.0003)*.16;
-canvas.style.opacity=String(scroll<.8?1:.22);}renderer.render(scene,camera)}
+canvas.style.opacity="1";}renderer.render(scene,camera)}
 canvas.parentElement.classList.add('webgl-ready');draw(0);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);canvas.parentElement.classList.remove('webgl-ready')});
 }catch(error){console.warn('Nova 3D unavailable; showing original emblem.',error)}
