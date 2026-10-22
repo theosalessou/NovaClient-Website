@@ -26,10 +26,6 @@ function render() {
 }
 function syncMotion() {
   root.classList.toggle('motion-off', !motion);
-  const button = $('.motion-toggle');
-  button.setAttribute('aria-pressed', String(motion));
-  button.setAttribute('aria-label', motion ? 'Pause animations' : 'Enable animations');
-  $('.motion-symbol').textContent = motion ? 'Ⅱ' : '▷';
   if (!motion) {
     document.getAnimations().forEach(a => a.cancel());
     $$('.magnetic').forEach(el => el.style.removeProperty('transform'));
@@ -37,7 +33,6 @@ function syncMotion() {
   }
   schedule();
 }
-$('.motion-toggle').addEventListener('click', () => { motion = !motion; syncMotion(); });
 reduced.addEventListener('change', e => { motion = !e.matches; syncMotion(); });
 syncMotion();
 // Animate the already-visible content; script failure never conceals information.
