@@ -1,6 +1,31 @@
 import * as THREE from './assets/vendor/three.module.js';
 const canvas=document.querySelector('#nova-scene');
 const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+// Preserve the hero's space while the actual canvas travels in the viewport.
+const wrap=canvas.parentElement,anchor=document.createElement('div');
+anchor.className='scene-anchor';anchor.setAttribute('aria-hidden','true');
+wrap.before(anchor);document.body.append(wrap);wrap.classList.add('scene-traveller');
+let destination={x:0,y:0,size:300,opacity:1},current=null,needsLayout=true;
+const intersects=(a,b)=>Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y));
+function layoutTraveller(){
+ const r=anchor.getBoundingClientRect(),mobile=innerWidth<761;
+ if(r.bottom>innerHeight*.35&&r.top<innerHeight*.85){destination={x:r.left,y:r.top,size:Math.min(r.width,r.height),opacity:1};destination.x+=(r.width-destination.size)/2;destination.y+=(r.height-destination.size)/2;return}
+ const obstacles=[];
+ // Measure visible ink rather than full-width paragraph boxes.
+ const walker=document.createTreeWalker(document.querySelector('main'),NodeFilter.SHOW_TEXT);
+ while(walker.nextNode()){const n=walker.currentNode;if(!n.textContent.trim()||n.parentElement.closest('script,style,[hidden],.scene-anchor'))continue;
+ const range=document.createRange();range.selectNodeContents(n);for(const b of range.getClientRects())if(b.bottom>0&&b.top<innerHeight&&b.width&&b.height)obstacles.push({x:b.left-12,y:b.top-12,w:b.width+24,h:b.height+24});}
+ for(const el of document.querySelectorAll('header,a.button,button,input,summary')){const b=el.getBoundingClientRect();if(b.bottom>0&&b.top<innerHeight)obstacles.push({x:b.left-10,y:b.top-10,w:b.width+20,h:b.height+20})}
+ let best=null;
+ for(const size of [mobile?116:190,mobile?78:110]){
+ for(const x of [innerWidth-size-12,12])for(const y of [innerHeight*.3,innerHeight*.5,innerHeight-size-24,innerHeight*.16]){
+ const box={x,y:Math.min(y,innerHeight-size-12),w:size,h:size};const score=obstacles.reduce((sum,b)=>sum+intersects(box,b),0);
+ if(!best||score<best.score)best={x:box.x,y:box.y,size,score};if(score===0)break;
+ }if(best.score===0)break;}
+ destination={...best,opacity:best.score===0?.9:0};
+}
+addEventListener('scroll',()=>{needsLayout=true},{passive:true});addEventListener('resize',()=>{needsLayout=true},{passive:true});
+
 try {
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
@@ -32,13 +57,22 @@ function resize(){const r=canvas.parentElement.getBoundingClientRect();renderer.
 canvas.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')});
 canvas.addEventListener('pointermove',e=>{if(reduce.matches)return;if(drag){targetY+=(e.clientX-lastX)*.008;targetX+=(e.clientY-lastY)*.006;lastX=e.clientX;lastY=e.clientY}else{targetY=(e.offsetX/canvas.clientWidth-.5)*.65;targetX=(e.offsetY/canvas.clientHeight-.5)*.35}});
 canvas.addEventListener('pointerup',()=>{drag=false;canvas.classList.remove('dragging')});canvas.addEventListener('pointercancel',()=>{drag=false});
-function draw(t){raf=requestAnimationFrame(draw);if(document.hidden)return;const motion=!reduce.matches&&!document.documentElement.classList.contains('motion-off');if(motion){rx+=(targetX-rx)*.055;ry+=(targetY-ry)*.055;const scroll=scrollY/innerHeight;const travel=Math.min(1,scroll);
+function draw(t){raf=requestAnimationFrame(draw);if(document.hidden)return;
+if(needsLayout){layoutTraveller();needsLayout=false}
+if(!current)current={...destination};const ease=reduce.matches?1:.085;
+for(const key of ['x','y','size','opacity'])current[key]+=(destination[key]-current[key])*ease;
+wrap.style.transform=`translate3d(${current.x}px,${current.y}px,0)`;wrap.style.width=Math.round(current.size)+'px';wrap.style.height=Math.round(current.size)+'px';
+// Hide during a long crossing instead of sweeping over readable content.
+const crossing=Math.abs(current.x-destination.x)+Math.abs(current.y-destination.y)>65;
+wrap.style.opacity=crossing?'0':String(current.opacity);canvas.style.pointerEvents=destination.size>220?'auto':'none';
+const motion=!reduce.matches&&!document.documentElement.classList.contains('motion-off');if(motion){rx+=(targetX-rx)*.055;ry+=(targetY-ry)*.055;const scroll=scrollY/innerHeight;
 group.rotation.set(rx+Math.sin(t*.0003)*.08,ry+scroll*.35,-.18+Math.sin(scroll)*.2);
 group.position.y=Math.sin(t*.00065)*.14;
 group.position.x=0;
 group.scale.setScalar(1);material.color.lerp(targetColor,.035);
 ring.rotation.z=-.65+Math.sin(t*.0003)*.16;
 canvas.style.opacity="1";}renderer.render(scene,camera)}
+document.addEventListener('pointermove',e=>{if(reduce.matches||drag||e.pointerType==='touch')return;targetY=(e.clientX/innerWidth-.5)*.7;targetX=(e.clientY/innerHeight-.5)*.4},{passive:true});
 canvas.parentElement.classList.add('webgl-ready');draw(0);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);canvas.parentElement.classList.remove('webgl-ready')});
 }catch(error){console.warn('Nova 3D unavailable; showing original emblem.',error)}
