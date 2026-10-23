@@ -44,3 +44,8 @@ Original native CSS/JS implementation inspired by the references, without copyin
 - Dedicated `/premium/` page; removed landing payment section; same role restrictions as `CLicense::HasPremium` and `CanCustomizeIndicator`.
 - Key action presets: `menus_settings_controls.cpp`, central `CBinds::Bind`; immediate-mode 3D is called only for Keybindings and has an active-menu guard.
 - Website linking calls `Store.link_player` after device proof; v2 signed `kog_player` claim is consumed by `CLicense`, enabling the Titles tab. OAuth alone does not unlock earned or assigned titles.
+
+- Native Linux activation backend: `novaclient_linux_security.h`, OpenSSL 3 ES256 and libsecret credential storage. Distribution requires a desktop keyring; Linux automatic updates are disabled until separate platform manifests exist. Website Linux download resolves only a real published package, otherwise links to official releases.
+- Retired earned title ID 55 remains reserved and cannot unlock, render or be published; every other title ID is preserved.
+
+- Complete settings snapshot: `src/engine/shared/config.cpp`, `config_domains.h`, `binds.cpp` and `hud_layout.cpp`; documented in `../docs/novaclient-settings.md`. Persists defaults, inherited preferences, binds and editable HUD state in user storage.

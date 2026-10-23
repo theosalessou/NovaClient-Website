@@ -176,3 +176,5 @@ body{background:radial-gradient(ellipse at 0 35%,#22132e66,transparent 32%),radi
 .story-media{margin-bottom:32px}.story-copy{min-width:0}.story-0{grid-template-columns:minmax(0,.85fr) minmax(0,1fr);gap:clamp(28px,4vw,64px)}.story-0 .story-media{margin-bottom:0}.story-media .feature-capture{width:100%}.feature-capture img{max-width:100%}@media(max-width:1000px){.story-0{display:block}.story-0 .story-media{max-width:640px;margin-bottom:36px}}
 
 .linux-download{padding-block:24px 32px;max-width:740px}.linux-download p{line-height:1.65;color:#b9acc8;margin-top:14px}.linux-download #linux-release-status{font-size:14px}
+
+.download-link small{display:block;font-size:clamp(16px,2vw,22px);line-height:1.5;letter-spacing:0;color:var(--muted);margin-top:12px}

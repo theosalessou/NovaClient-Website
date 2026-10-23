@@ -123,6 +123,12 @@ const sectionObserver = new IntersectionObserver(entries => {
 fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_page=8', { signal: AbortSignal.timeout(7000) })
   .then(r => { if (!r.ok) throw Error(); return r.json(); })
   .then(releases => {
+    const linuxLink = $('#linux-download');
+    if (linuxLink) {
+      const published = releases.filter(r => !r.draft && r.html_url?.startsWith(releaseBase + 'tag/')).sort((a,b) => Date.parse(b.published_at)-Date.parse(a.published_at));
+      const linuxAsset = published.flatMap(r => r.assets || []).find(a => /^NovaClient-.*linux[-_]x86_64.*\.zip$/i.test(a.name) && a.browser_download_url?.startsWith(releaseBase + 'download/'));
+      if (linuxAsset) { linuxLink.href=linuxAsset.browser_download_url; $('#linux-release-status').textContent=linuxAsset.name; }
+    }
     const asset = r => r.assets?.find(a => /^NovaClient-.*-win64\.zip$/i.test(a.name) && a.browser_download_url?.startsWith(releaseBase + 'download/'));
     const release = releases.filter(r => !r.draft && r.html_url?.startsWith(releaseBase + 'tag/') && asset(r)).sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))[0];
     if (!release) throw Error();
