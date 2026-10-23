@@ -127,7 +127,7 @@ fetch('https://api.github.com/repos/theosalessou/NovaClient-Dist/releases?per_pa
     if (linuxLink) {
       const published = releases.filter(r => !r.draft && r.html_url?.startsWith(releaseBase + 'tag/')).sort((a,b) => Date.parse(b.published_at)-Date.parse(a.published_at));
       const linuxAsset = published.flatMap(r => r.assets || []).find(a => /^NovaClient-.*linux[-_]x86_64.*\.zip$/i.test(a.name) && a.browser_download_url?.startsWith(releaseBase + 'download/'));
-      if (linuxAsset) { linuxLink.href=linuxAsset.browser_download_url; $('#linux-release-status').textContent=linuxAsset.name; }
+      if (linuxAsset) { linuxLink.href=linuxAsset.browser_download_url; linuxLink.setAttribute('aria-label','Download NovaClient for Linux x86_64'); $('#linux-release-status').textContent=linuxAsset.name; }
     }
     const asset = r => r.assets?.find(a => /^NovaClient-.*-win64\.zip$/i.test(a.name) && a.browser_download_url?.startsWith(releaseBase + 'download/'));
     const release = releases.filter(r => !r.draft && r.html_url?.startsWith(releaseBase + 'tag/') && asset(r)).sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))[0];
@@ -140,7 +140,7 @@ $('#copy-download').addEventListener('click', async () => {
   const button = $('#copy-download');
   try { await navigator.clipboard.writeText($('[data-download]').href); button.textContent = 'Link copied'; }
   catch { button.textContent = 'Use the download link'; }
-  setTimeout(() => { button.textContent = 'Copy link'; }, 2500);
+  setTimeout(() => { button.textContent = 'Copy Windows link'; }, 2500);
 });
 const pixButton = document.getElementById('copy-pix');
 if (pixButton) pixButton.addEventListener('click', async () => {

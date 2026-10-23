@@ -5,7 +5,7 @@
 <title>NovaClient — Find your own orbit.</title>
 <meta name="description" content="NovaClient is an independent DDNet client built on DDNet and TClient. Make the game feel like your own. Windows x64 and Linux x86_64 packages.">
 <meta name="theme-color" content="#060509"><meta property="og:title" content="NovaClient — Your game. Your rhythm."><meta property="og:description" content="An independent DDNet client. Made to feel like you."><meta property="og:type" content="website"><meta property="og:image" content="https://novaclient.tech/assets/icon.png">
-<link rel="icon" href="assets/icon.png"><link rel="preload" href="assets/manrope.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="style.css?v=9"><script src="site.js" defer></script><script type="module" src="nova-scene.js?v=7"></script>
+<link rel="icon" href="assets/icon.png"><link rel="preload" href="assets/manrope.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="style.css?v=10"><script src="site.js" defer></script><script type="module" src="nova-scene.js?v=7"></script>
 <link rel="stylesheet" href="/header.css?v=4"><script src="/header.js?v=4" defer></script></head>
 <body>
 <a class="skip-link" href="#about">Skip to content</a>
@@ -78,10 +78,18 @@
 
 <section class="download" id="download" aria-labelledby="download-title">
 <div class="download-inner frame">
-<div class="download-top"><h2 id="download-title" class="reveal">Your next run<br>starts here.</h2><div class="download-copy"><p class="reveal">NovaClient for Windows x64 and Linux x86_64.<br>Get your NovaClient key in our <a class="discord-inline" href="https://discord.gg/ZBhRJQJvZj">Discord server ↗</a>.</p><p class="reveal">Choose your platform below and extract the complete ZIP. On Windows, open DDNet.exe. Updating keeps your existing activation.</p></div></div>
-<a class="download-link reveal" data-download href="https://github.com/theosalessou/NovaClient-Dist/releases"><span>Download<small>Windows x64</small></span><span class="download-arrow" aria-hidden="true">↗</span></a>
-<div class="linux-download"><a class="button" id="linux-download" href="https://github.com/theosalessou/NovaClient-Dist/releases">Linux x86_64 releases ↗</a><p id="linux-release-status">Check the official releases for a published Linux package.</p><p>The Linux build targets Ubuntu 24.04 x86_64 (glibc 2.39+) with OpenSSL 3 and an unlocked desktop Secret Service keyring. Extract the complete package, make DDNet executable and keep the data folder beside it. Linux updates are installed manually; in-game voice capture is Windows-only.</p></div>
-<ol class="install-steps reveal"><li><strong>Download</strong><span>Get the complete Windows x64 ZIP.</span></li><li><strong>Extract</strong><span>Keep the executable, DLLs and data together.</span></li><li><strong>Jump in</strong><span>Open DDNet.exe and activate your license.</span></li></ol><div class="download-meta reveal"><span id="release-status" role="status">Official releases on GitHub</span><div><a href="https://github.com/theosalessou/NovaClient-Dist/releases">All releases <span aria-hidden="true">↗</span></a><button class="plain-button" id="copy-download">Copy link</button></div></div>
+<div class="download-top"><h2 id="download-title" class="reveal">Ready for your<br>next run.</h2><div class="download-copy"><p>Choose your platform. Get the complete client, extract the ZIP and activate your license.</p><p>Need a key? Join the <a class="discord-inline" href="https://discord.gg/ZBhRJQJvZj">NovaClient Discord server ↗</a>.</p></div></div>
+<div class="platform-downloads">
+<a class="platform-download reveal" data-download href="https://github.com/theosalessou/NovaClient-Dist/releases" aria-label="Download NovaClient for Windows x64">
+<img class="platform-icon" src="assets/windows.svg" alt="" width="48" height="48" aria-hidden="true"><span class="platform-copy"><strong>Windows</strong><span class="platform-architecture">Windows x64 · Complete ZIP</span><span class="platform-version" id="release-status" role="status">Browse official releases</span></span><svg class="platform-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg>
+</a>
+<a class="platform-download reveal" id="linux-download" href="https://github.com/theosalessou/NovaClient-Dist/releases" aria-label="Find NovaClient Linux x86_64 packages in official releases">
+<img class="platform-icon" src="assets/linux.svg" alt="" width="48" height="48" aria-hidden="true"><span class="platform-copy"><strong>Linux</strong><span class="platform-architecture">Ubuntu 24.04 · x86_64</span><span class="platform-version" id="linux-release-status" role="status">Check official releases for a published package</span></span><svg class="platform-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg>
+</a>
+</div>
+<ol class="install-steps"><li><strong>Extract the ZIP</strong><span>Keep the executable and data together. Windows also needs the included DLLs.</span></li><li><strong>Activate your client</strong><span>Open DDNet.exe on Windows or DDNet on Linux, then enter your NovaClient key.</span></li><li><strong>Keep your setup</strong><span>Updating preserves your existing activation and saved settings.</span></li></ol>
+<details class="platform-requirements"><summary>Linux requirements</summary><p>Built for Ubuntu 24.04 x86_64 (glibc 2.39+). Requires OpenSSL 3, an unlocked Secret Service keyring and the system libraries listed in the package README. Make DDNet executable after extracting. Linux updates are installed manually; in-game voice capture is Windows-only.</p></details>
+<div class="download-meta"><a href="https://github.com/theosalessou/NovaClient-Dist/releases">All official releases ↗</a><button class="plain-button" id="copy-download">Copy Windows link</button></div>
 </div>
 </section>
 <section class="questions frame" id="questions" aria-labelledby="questions-title">

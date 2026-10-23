@@ -49,3 +49,5 @@ Original native CSS/JS implementation inspired by the references, without copyin
 - Retired earned title ID 55 remains reserved and cannot unlock, render or be published; every other title ID is preserved.
 
 - Complete settings snapshot: `src/engine/shared/config.cpp`, `config_domains.h`, `binds.cpp` and `hud_layout.cpp`; documented in `../docs/novaclient-settings.md`. Persists defaults, inherited preferences, binds and editable HUD state in user storage.
+
+- Download platform chooser: local Windows SVG and Simple Icons Linux mark (CC0, https://github.com/simple-icons/simple-icons/blob/develop/icons/linux.svg). Both options use official NovaClient-Dist releases, with explicit Linux publication fallback.
