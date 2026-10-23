@@ -164,3 +164,9 @@ body{background:radial-gradient(ellipse at 0 35%,#22132e66,transparent 32%),radi
 .scene-traveller .scene-vignette{display:none}.scene-traveller .scene-fallback{inset:10%;width:80%;height:80%}
 @media(max-width:760px){.scene-anchor{height:clamp(230px,65vw,360px)}}
 @media(prefers-reduced-motion:reduce){.scene-wrap.scene-traveller{transition:none}}
+
+/* The emblem lives beneath content, never in a floating corner widget. */
+.scene-wrap.scene-traveller{z-index:0;contain:layout;filter:drop-shadow(0 0 22px #8138c54d);transition:none}
+.scene-wrap.scene-traveller canvas{pointer-events:none;cursor:default}
+.scene-background{isolation:isolate}
+@media(max-width:760px){.scene-wrap.scene-traveller{filter:drop-shadow(0 0 14px #8138c533)}}
