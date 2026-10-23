@@ -38,3 +38,9 @@ Original native CSS/JS implementation inspired by the references, without copyin
 - Earned catalog: `src/game/client/components/kog_stats_data.cpp`; generated website catalog at `services/novaclient-licenses/earned_titles.json` (regenerate after catalog changes).
 - Per-letter gradient/RGB/wave/pulse formulas: `src/game/client/components/kog_stats.cpp`, mirrored in `dist/titles.js`.
 - Public profile allowlist, opaque identifiers and assignment validation: `services/novaclient-licenses/website_accounts.py`. No private license or device metadata is public.
+
+## 2026-10-23 update
+- Real user-provided captures integrated next to practice, minimap, statboard, team, Twitch, indicators, KoG, titles and keyboard descriptions in `dist/assets/features/`. No fabricated demonstrations.
+- Dedicated `/premium/` page; removed landing payment section; same role restrictions as `CLicense::HasPremium` and `CanCustomizeIndicator`.
+- Key action presets: `menus_settings_controls.cpp`, central `CBinds::Bind`; immediate-mode 3D is called only for Keybindings and has an active-menu guard.
+- Website linking calls `Store.link_player` after device proof; v2 signed `kog_player` claim is consumed by `CLicense`, enabling the Titles tab. OAuth alone does not unlock earned or assigned titles.
