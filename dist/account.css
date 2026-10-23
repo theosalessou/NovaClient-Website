@@ -14,7 +14,7 @@ main{max-width:1360px}.identity{position:relative;isolation:isolate;padding:38px
 .ranking-back{display:inline-flex;color:#c69ce9;margin-top:36px;font-size:13px}
 .ranking-back:hover{color:white}
 .ranking-top p{color:var(--muted);font-size:13px;max-width:28ch}
-.category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:30px;border-top:1px solid var(--line)}
+.category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:30px}
 .category-row{position:relative;min-width:0;min-height:250px;padding:30px 38px 34px;border-bottom:1px solid var(--line);transition:background .25s}
 .category-row:nth-child(odd){border-right:1px solid var(--line)}
 .category-row:hover,.category-row:focus-within{background:radial-gradient(ellipse at 85% 10%,#8c5cc720,transparent 62%),#120c1a}
