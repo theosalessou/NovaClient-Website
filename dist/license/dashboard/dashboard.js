@@ -53,7 +53,7 @@ function baseLineChart(points){
  let out=`<svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="group" aria-label="Hourly community activity. Use arrow keys to explore samples.">`;
  for(let i=0;i<4;i++){const value=max*i/3,yy=y(value);out+=`<line class="gridline" x1="${left}" x2="${width-right}" y1="${yy}" y2="${yy}"/><text x="${left-8}" y="${yy+3}" text-anchor="end">${num(value)}</text>`;}
  if(points.length>1&&!gaps)out+=`<path class="chart-area" d="${path('value')} L${x(points.length-1)},${y(0)} L${x(0)},${y(0)}Z"/>`;
- out+=`<path class="chart-line" d="${path('value')}"/><path class="secondary-line" d="${path('secondary')}"/>`;
+ out+=`<path class="secondary-line" d="${path('secondary')}"/><path class="chart-line" d="${path('value')}"/>`;
  for(const i of [...new Set([0,Math.floor((points.length-1)/2),points.length-1])])out+=`<text x="${x(i)}" y="${height-8}" text-anchor="${i===0?'start':i===points.length-1?'end':'middle'}">${esc(points[i].short)}</text>`;
  points.forEach((p,i)=>{const label=`${p.label}: ${num(p.value)} online, ${num(p.secondary)} playing`,prev=i? (x(i-1)+x(i))/2:left,next=i<points.length-1?(x(i)+x(i+1))/2:width-right;out+=`<g class="chart-sample" data-sample="${i}" data-date="${esc(p.label)}" data-online="${Number(p.value)}" data-playing="${Number(p.secondary||0)}" tabindex="${i===points.length-1?'0':'-1'}" aria-label="${esc(label)}"><rect class="sample-hit" x="${prev}" y="${top}" width="${Math.max(1,next-prev)}" height="${h}"/><g class="sample-marker" aria-hidden="true"><line x1="${x(i)}" x2="${x(i)}" y1="${top}" y2="${top+h}"/><circle class="online-marker" cx="${x(i)}" cy="${y(p.value)}" r="4"/><circle class="playing-marker" cx="${x(i)}" cy="${y(p.secondary||0)}" r="4"/></g></g>`;});
  return out+'</svg>';
