@@ -46,23 +46,22 @@ function renderMetrics(){
  $('metrics').innerHTML=metrics.map(([label,value,note,tone],i)=>`<article class="metric"><span class="metric-label">${i===0?'<span class="status-dot"></span>':''}${label}</span><strong class="metric-value ${i===0?'accent':''}">${value}</strong><span class="metric-note ${tone}">${esc(note)}</span></article>`).join('');
 }
 function baseLineChart(points){
- const width=600,height=188,left=31,right=12,top=17,bottom=29,w=width-left-right,h=height-top-bottom;
+ const width=600,height=230,left=36,right=16,top=20,bottom=32,w=width-left-right,h=height-top-bottom;
  const max=Math.ceil(Math.max(1,...points.flatMap(p=>[p.value,p.secondary||0]))/3)*3,span=points.at(-1).time-points[0].time,x=i=>left+(span?(points[i].time-points[0].time)/span*w:w/2),y=v=>top+h-v/max*h;
  const gaps=points.some((p,i)=>i&&p.time-points[i-1].time>3600);
  const path=key=>points.map((p,i)=>`${i&&p.time-points[i-1].time<=3600?'L':'M'}${x(i).toFixed(1)},${y(p[key]||0).toFixed(1)}`).join(' ');
- let out=`<svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="History: peak online and playing clients per hour">`;
+ let out=`<svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="group" aria-label="Hourly community activity. Use arrow keys to explore samples.">`;
  for(let i=0;i<4;i++){const value=max*i/3,yy=y(value);out+=`<line class="gridline" x1="${left}" x2="${width-right}" y1="${yy}" y2="${yy}"/><text x="${left-8}" y="${yy+3}" text-anchor="end">${num(value)}</text>`;}
  if(points.length>1&&!gaps)out+=`<path class="chart-area" d="${path('value')} L${x(points.length-1)},${y(0)} L${x(0)},${y(0)}Z"/>`;
  out+=`<path class="chart-line" d="${path('value')}"/><path class="secondary-line" d="${path('secondary')}"/>`;
- points.forEach((p,i)=>{out+=`<circle class="chart-point" cx="${x(i)}" cy="${y(p.value)}" r="3"/>`;});
  for(const i of [...new Set([0,Math.floor((points.length-1)/2),points.length-1])])out+=`<text x="${x(i)}" y="${height-8}" text-anchor="${i===0?'start':i===points.length-1?'end':'middle'}">${esc(points[i].short)}</text>`;
- points.forEach((p,i)=>{const tx=Math.max(left+4,Math.min(x(i)-112,width-right-228)),ty=Math.max(top+3,Math.min(y(Math.max(p.value,p.secondary))-53,top+h-49)),label=`${p.label}: ${num(p.value)} online, ${num(p.secondary)} playing`;out+=`<g class="chart-hover" tabindex="0" aria-label="${esc(label)}"><circle class="chart-hit" cx="${x(i)}" cy="${y(p.value)}" r="11"/><circle class="chart-hit" cx="${x(i)}" cy="${y(p.secondary)}" r="11"/><g class="chart-tooltip"><rect class="chart-tooltip-box" x="${tx}" y="${ty}" width="224" height="42" rx="7"/><text class="chart-tooltip-date" x="${tx+11}" y="${ty+16}">${esc(p.label)}</text><text class="chart-tooltip-value" x="${tx+11}" y="${ty+33}">${num(p.value)} online · ${num(p.secondary)} playing</text></g></g>`;});
+ points.forEach((p,i)=>{const label=`${p.label}: ${num(p.value)} online, ${num(p.secondary)} playing`,prev=i? (x(i-1)+x(i))/2:left,next=i<points.length-1?(x(i)+x(i+1))/2:width-right;out+=`<g class="chart-sample" data-sample="${i}" data-date="${esc(p.label)}" data-online="${Number(p.value)}" data-playing="${Number(p.secondary||0)}" tabindex="${i===points.length-1?'0':'-1'}" aria-label="${esc(label)}"><rect class="sample-hit" x="${prev}" y="${top}" width="${Math.max(1,next-prev)}" height="${h}"/><g class="sample-marker" aria-hidden="true"><line x1="${x(i)}" x2="${x(i)}" y1="${top}" y2="${top+h}"/><circle class="online-marker" cx="${x(i)}" cy="${y(p.value)}" r="4"/><circle class="playing-marker" cx="${x(i)}" cy="${y(p.secondary||0)}" r="4"/></g></g>`;});
  return out+'</svg>';
 }
 function activityWidget(){
  const history=snapshot.history.filter(p=>p.time+3600>=periodStart()),peak=Math.max(0,...history.map(p=>p.peak));
  const points=history.map(p=>({time:p.time,value:p.online,secondary:p.playing,label:datetime(p.time),short:new Date(p.time*1000).toLocaleDateString('en-US',{day:'2-digit',month:'2-digit'})+' '+new Date(p.time*1000).getHours()+'h'}));
- return `<div class="chart-summary"><strong>${num(peak)}</strong><span>peak concurrent clients sampled during this period</span></div>${points.length?lineChart(points):empty('History starts here.','The first samples will appear as the dashboard refreshes.')}<div class="chart-legend"><span><i class="swatch"></i>Online</span><span><i class="swatch green"></i>Playing</span></div><p class="chart-disclaimer">Hourly peaks observed in minute samples while the CRM is queried. Online and playing peaks may occur at different minutes. Gaps between samples do not represent zero. Up to 90 days of history.</p>`;
+ return `<div class="chart-summary"><strong>${num(peak)}</strong><span>peak concurrent clients sampled during this period</span></div>${points.length?lineChart(points):empty('History starts here.','The first samples will appear as the dashboard refreshes.')}<details class="chart-method"><summary>About these samples</summary><p class="chart-disclaimer">Hourly peaks observed in minute samples while the CRM is queried. Online and playing peaks may occur at different minutes. Gaps between samples do not represent zero. Up to 90 days of history.</p></details>`;
 }
 function cohortsWidget(){
  const n=Number($('period').value),buckets=[],base=new Date(snapshot.now*1000);base.setHours(0,0,0,0);base.setDate(base.getDate()-n+1);

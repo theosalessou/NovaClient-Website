@@ -71,9 +71,24 @@ function zoomPoints(points,key){
 }
 function chartControls(key){
  const [start,end]=chartWindows[key],count=chartLengths[key]||0;
- return `<div class="chart-controls"><button data-chart="${key}" data-zoom="in" aria-label="Zoom in">+</button><button data-chart="${key}" data-zoom="out" aria-label="Zoom out">−</button><button data-chart="${key}" data-zoom="reset">Reset zoom</button><label>From<input aria-label="Chart start" type="range" min="0" max="1000" value="${Math.round(start*1000)}" data-chart-range="${key}" data-edge="0" ${count<3?'disabled':''}></label><label>To<input aria-label="Chart end" type="range" min="0" max="1000" value="${Math.round(end*1000)}" data-chart-range="${key}" data-edge="1" ${count<3?'disabled':''}></label></div><p class="chart-zoom-info">Scroll to zoom · Drag chart to pan · ${num(Math.round((end-start)*100))}% of the period</p>`;
+ return `<div class="chart-controls"><button data-chart="${key}" data-zoom="in" aria-label="Zoom in">+</button><button data-chart="${key}" data-zoom="out" aria-label="Zoom out">−</button><button data-chart="${key}" data-zoom="reset">Reset zoom</button><label>From<input aria-label="Chart start" type="range" min="0" max="1000" value="${Math.round(start*1000)}" data-chart-range="${key}" data-edge="0" ${count<3?'disabled':''}></label><label>To<input aria-label="Chart end" type="range" min="0" max="1000" value="${Math.round(end*1000)}" data-chart-range="${key}" data-edge="1" ${count<3?'disabled':''}></label></div><p class="chart-zoom-info">Scroll to zoom · Drag to pan · ${num(Math.round((end-start)*100))}% of the period</p>`;
 }
-function lineChart(points){return `<div class="zoom-chart" data-zoomchart="activity">${baseLineChart(zoomPoints(points,'activity'))}${chartControls('activity')}</div>`;}
+function sampleReadout(p){return `<div class="sample-date"><span>Selected sample</span><strong data-readout-date>${esc(p.label)}</strong></div><div class="sample-value"><span><i class="swatch"></i>Online</span><strong data-readout-online>${num(p.value)}</strong></div><div class="sample-value"><span><i class="swatch green"></i>Playing</span><strong data-readout-playing>${num(p.secondary||0)}</strong></div>`;}
+function lineChart(points){const visible=zoomPoints(points,'activity');return `<div class="zoom-chart" data-zoomchart="activity">${baseLineChart(visible)}<div class="chart-readout" aria-live="polite" aria-atomic="true">${sampleReadout(visible.at(-1))}</div>${chartControls('activity')}</div>`;}
+function selectChartSample(sample){
+ const chart=sample.closest('[data-zoomchart]'),readout=chart?.querySelector('.chart-readout');if(!readout)return;
+ chart.querySelectorAll('.chart-sample').forEach(el=>{el.classList.toggle('selected',el===sample);el.setAttribute('tabindex',el===sample?'0':'-1');});
+ readout.querySelector('[data-readout-date]').textContent=sample.dataset.date;
+ readout.querySelector('[data-readout-online]').textContent=num(Number(sample.dataset.online));
+ readout.querySelector('[data-readout-playing]').textContent=num(Number(sample.dataset.playing));
+}
+document.addEventListener('pointerover',event=>{const sample=event.target.closest('.chart-sample');if(sample&&!pan)selectChartSample(sample);});
+document.addEventListener('focusin',event=>{const sample=event.target.closest('.chart-sample');if(sample)selectChartSample(sample);});
+document.addEventListener('click',event=>{const sample=event.target.closest('.chart-sample');if(sample)selectChartSample(sample);});
+document.addEventListener('keydown',event=>{
+ const sample=event.target.closest('.chart-sample');if(!sample||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+ event.preventDefault();const samples=[...sample.parentElement.querySelectorAll('.chart-sample')],i=samples.indexOf(sample),next=event.key==='Home'?0:event.key==='End'?samples.length-1:Math.max(0,Math.min(samples.length-1,i+(event.key==='ArrowRight'?1:-1)));samples[next].focus();
+});
 function setChartWindow(key,start,end){
  const min=Math.min(1,Math.max(.02,2/Math.max(2,chartLengths[key]||2))),size=Math.min(1,Math.max(min,end-start));
  start=Math.max(0,Math.min(1-size,start));chartWindows[key]=[start,start+size];
@@ -84,7 +99,7 @@ function zoomChart(key,factor,at=.5){
  setChartWindow(key,center-newSize*at,center+newSize*(1-at));
 }
 document.addEventListener('wheel',event=>{
- const chart=event.target.closest('[data-zoomchart]');if(!chart||!chart.querySelector('svg')||(chartLengths[chart.dataset.zoomchart]||0)<3)return;
+ const chart=event.target.closest('[data-zoomchart]');if(!event.target.closest('svg')||!chart||!chart.querySelector('svg')||(chartLengths[chart.dataset.zoomchart]||0)<3)return;
  event.preventDefault();const rect=chart.querySelector('svg').getBoundingClientRect(),factor=Math.exp(Math.max(-.35,Math.min(.35,event.deltaY*.0015)));
  zoomChart(chart.dataset.zoomchart,factor,Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)));
 },{passive:false});
