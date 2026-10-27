@@ -20,8 +20,8 @@ function layoutTraveller(){
 addEventListener('scroll',()=>{needsLayout=true},{passive:true});addEventListener('resize',()=>{needsLayout=true},{passive:true});
 
 try {
-const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
-renderer.setClearColor(0x000000,0);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
+const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:false,powerPreference:'low-power'});
+renderer.setClearColor(0x000000,0);renderer.setPixelRatio(Math.min(devicePixelRatio,1));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1,.1,100);camera.position.set(0,0,11);
 const group=new THREE.Group();scene.add(group);
 // Extruded four-point Nova star. Curved arms follow the original mark's silhouette.
@@ -60,18 +60,20 @@ const particles=new THREE.BufferGeometry();particles.setAttribute('position',new
 let sectionTone=0;
 const tones=[0x9462cf,0x8871cc,0x706bb4,0xbd79a6,0xab80d7];
 const targetColor=new THREE.Color(tones[0]);
-const storyObserver=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){sectionTone=Number(e.target.dataset.scene)||0;targetColor.setHex(tones[sectionTone]);}}, {rootMargin:'-15% 0px -45% 0px'});
+const storyObserver=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){sectionTone=Number(e.target.dataset.scene)||0;targetColor.setHex(tones[sectionTone]);scheduleFrame();}}, {rootMargin:'-15% 0px -45% 0px'});
 document.querySelectorAll('[data-scene]').forEach(el=>storyObserver.observe(el));
-document.querySelectorAll('a,button,.input-modes li').forEach(el=>el.addEventListener('pointerenter',()=>{targetY+=.14}));
-let targetX=.12,targetY=-.3,rx=.12,ry=-.3,spin=0,lastTime=0,drag=false,lastX=0,lastY=0,raf=0;
-function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.position.z=11;camera.updateProjectionMatrix();needsLayout=true;}
+document.querySelectorAll('a,button,.input-modes li').forEach(el=>el.addEventListener('pointerenter',()=>{targetY+=.14;scheduleFrame()}));
+let targetX=.12,targetY=-.3,rx=.12,ry=-.3,spin=0,lastTime=0,drag=false,lastX=0,lastY=0,raf=0,timer=0;
+function scheduleFrame(){if(!raf&&!timer&&!document.hidden)raf=requestAnimationFrame(draw)}
+function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.position.z=11;camera.updateProjectionMatrix();needsLayout=true;scheduleFrame();}
 addEventListener('resize',resize,{passive:true});resize();
 canvas.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')});
 canvas.addEventListener('pointermove',e=>{if(reduce.matches)return;if(drag){targetY+=(e.clientX-lastX)*.008;targetX+=(e.clientY-lastY)*.006;lastX=e.clientX;lastY=e.clientY}else{targetY=(e.offsetX/canvas.clientWidth-.5)*.65;targetX=(e.offsetY/canvas.clientHeight-.5)*.35}});
 canvas.addEventListener('pointerup',()=>{drag=false;canvas.classList.remove('dragging')});canvas.addEventListener('pointercancel',()=>{drag=false});
-function draw(t){raf=requestAnimationFrame(draw);if(document.hidden)return;
+function draw(t){raf=0;if(document.hidden)return;
 if(needsLayout){layoutTraveller();needsLayout=false}
-if(!current)current={...destination};const ease=reduce.matches?1:.085;
+if(!current)current={...destination};
+const paused=reduce.matches||document.documentElement.classList.contains('motion-off'),ease=paused?1:.085;
 for(const key of ['x','y','size','opacity'])current[key]+=(destination[key]-current[key])*ease;
 const visibleHeight=2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.position.z;
 const unitsPerPixel=visibleHeight/innerHeight;
@@ -80,14 +82,19 @@ group.position.y=(innerHeight/2-current.y-current.size/2)*unitsPerPixel;
 group.scale.setScalar(current.size*unitsPerPixel/7);
 wrap.style.opacity=String(current.opacity);canvas.style.pointerEvents='none';
 const delta=Math.min(.05,Math.max(0,(t-lastTime)/1000));lastTime=t;
-const motion=!reduce.matches&&!document.documentElement.classList.contains('motion-off');if(motion){rx+=(targetX-rx)*.055;ry+=(targetY-ry)*.055;spin+=delta*.19;
+const motion=!paused;if(motion){rx+=(targetX-rx)*.055;ry+=(targetY-ry)*.055;spin+=delta*.19;
 group.rotation.set(rx+Math.sin(t*.0003)*.08,ry+spin,-.18+Math.sin(spin*.5)*.12);
 group.position.y+=Math.sin(spin*3.4)*.08;
 
 material.color.lerp(targetColor,.035);
 ring.rotation.z=-.65+spin*.3;orbit.rotation.z=.35-spin*.22;
-canvas.style.opacity="1";}renderer.render(scene,camera)}
+canvas.style.opacity="1";}renderer.render(scene,camera);
+if(motion)timer=setTimeout(()=>{timer=0;scheduleFrame()},33)}
 document.addEventListener('pointermove',e=>{if(reduce.matches||drag||e.pointerType==='touch')return;targetY=(e.clientX/innerWidth-.5)*.7;targetX=(e.clientY/innerHeight-.5)*.4},{passive:true});
-canvas.parentElement.classList.add('webgl-ready');draw(0);
-canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);canvas.parentElement.classList.remove('webgl-ready')});
+addEventListener('scroll',()=>{needsLayout=true;scheduleFrame()},{passive:true});
+const motionObserver=new MutationObserver(scheduleFrame);motionObserver.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+reduce.addEventListener('change',scheduleFrame);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);clearTimeout(timer);raf=timer=0}else scheduleFrame()});
+canvas.parentElement.classList.add('webgl-ready');scheduleFrame();
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);clearTimeout(timer);raf=timer=0;canvas.parentElement.classList.remove('webgl-ready')});
 }catch(error){console.warn('Nova 3D unavailable; showing original emblem.',error)}
