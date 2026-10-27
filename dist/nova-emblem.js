@@ -1,6 +1,6 @@
 import * as THREE from './assets/vendor/three.module.js';
 
-// A bounded, demand-rendered hero. There is no idle animation or page-wide canvas.
+// Demand-rendered emblem: movement across the page uses a small CSS layer.
 export function createEmblem(canvas) {
   const wrap = canvas.parentElement;
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -48,6 +48,22 @@ export function createEmblem(canvas) {
   const orbit = new THREE.Mesh(new THREE.TorusGeometry(2.85, .024, 6, 72), orbitMaterial);
   orbit.rotation.set(-.65, .65, .35);
   group.add(orbit);
+  for (let i = 0; i < 3; i++) {
+    const bead = new THREE.Mesh(new THREE.IcosahedronGeometry(.065, 1), orbitMaterial);
+    const angle = i * Math.PI * 2 / 3;
+    bead.position.set(Math.cos(angle) * 2.85, Math.sin(angle) * 2.85, 0);
+    orbit.add(bead);
+  }
+  const lightCanvas = document.createElement('canvas');
+  lightCanvas.width = lightCanvas.height = 128;
+  const context = lightCanvas.getContext('2d');
+  const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gradient.addColorStop(0, 'rgba(150,65,235,.42)');
+  gradient.addColorStop(.4, 'rgba(114,37,193,.16)');
+  gradient.addColorStop(1, 'rgba(87,20,150,0)');
+  context.fillStyle = gradient; context.fillRect(0, 0, 128, 128);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(lightCanvas), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+  glow.scale.set(8.5, 8.5, 1); glow.position.z = -.7; group.add(glow);
   scene.add(new THREE.HemisphereLight(0xd8c9ff, 0x170324, 2));
   for (const [color, intensity, x, y, z] of [[0xffffff, 3, -3, 4, 4], [0xb16aff, 2, 4, -1, 3]]) {
     const light = new THREE.DirectionalLight(color, intensity);
@@ -57,6 +73,8 @@ export function createEmblem(canvas) {
 
   let active = false, disposed = false, frame = 0, dirty = true;
   let targetX = .12, targetY = -.3, rx = .12, ry = -.3, lastTime = 0;
+  let targetZ = -.18, rz = -.18, targetEnergy = 0, currentEnergy = 0;
+  const targetColor = material.color.clone();
   let pointer = null, lastX = 0, lastY = 0;
   function schedule() {
     if (active && !disposed && !frame) frame = requestAnimationFrame(draw);
@@ -80,10 +98,18 @@ export function createEmblem(canvas) {
     const ease = 1 - Math.exp(-14 * delta);
     rx += (targetX - rx) * ease;
     ry += (targetY - ry) * ease;
-    const settling = Math.abs(targetX - rx) + Math.abs(targetY - ry) > .001;
-    if (!settling) { rx = targetX; ry = targetY; }
+    rz += (targetZ - rz) * ease;
+    currentEnergy += (targetEnergy - currentEnergy) * ease;
+    material.color.lerp(targetColor, ease);
+    const colorError = Math.abs(material.color.r - targetColor.r) + Math.abs(material.color.g - targetColor.g) + Math.abs(material.color.b - targetColor.b);
+    const settling = Math.abs(targetX - rx) + Math.abs(targetY - ry) + Math.abs(targetZ - rz) + Math.abs(targetEnergy - currentEnergy) + colorError > .001;
+    if (!settling) { rx = targetX; ry = targetY; rz = targetZ; currentEnergy = targetEnergy; material.color.copy(targetColor); }
     if (dirty || settling) {
-      group.rotation.set(rx, ry, -.18);
+      group.rotation.set(rx, ry, rz);
+      ring.rotation.z = -.65 - rx * .22;
+      orbit.rotation.z = .35 + ry * .25;
+      material.emissiveIntensity = 1 + currentEnergy * .7;
+      orbitMaterial.opacity = .48 + currentEnergy * .2;
       renderer.render(scene, camera);
       wrap.classList.add('webgl-ready');
       dirty = settling;
@@ -129,6 +155,12 @@ export function createEmblem(canvas) {
   size.observe(wrap);
   resize();
   return {
+    setPose({ x, y, z, tone, energy }) {
+      if (!active || disposed) return;
+      if (Math.abs(targetX - x) + Math.abs(targetY - y) + Math.abs(targetZ - z) + Math.abs(targetEnergy - energy) < .00001 && targetColor.getHex() === tone) return;
+      targetX = x; targetY = y; targetZ = z; targetEnergy = energy;
+      targetColor.setHex(tone); dirty = true; schedule();
+    },
     setActive(value) {
       active = value && !disposed;
       if (active) { lastTime = 0; schedule(); }
@@ -143,7 +175,7 @@ export function createEmblem(canvas) {
       const geometries = new Set(), materials = new Set();
       scene.traverse(object => { if (object.geometry) geometries.add(object.geometry); if (object.material) materials.add(object.material); });
       geometries.forEach(value => value.dispose());
-      materials.forEach(value => value.dispose());
+      materials.forEach(value => { value.map?.dispose(); value.dispose(); });
       renderer.dispose();
       wrap.classList.remove('webgl-ready');
     }

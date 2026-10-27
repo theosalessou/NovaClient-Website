@@ -5,9 +5,10 @@ const $$ = s => [...document.querySelectorAll(s)];
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
-let motion = !reduced.matches, frame = 0;
+let userMotion = true, motion = !reduced.matches, frame = 0;
 const wordmark = $('#hero-title');
 const progress = $('.reading-progress');
+const motionToggle = $('#motion-toggle');
 function schedule() { if (!frame && !document.hidden) frame = requestAnimationFrame(render); }
 function render() {
   frame = 0;
@@ -15,7 +16,13 @@ function render() {
   progress.style.transform = `scaleX(${Math.min(1, Math.max(0, scrollY / scrollable))})`;
 }
 function syncMotion() {
+  motion = userMotion && !reduced.matches;
   root.classList.toggle('motion-off', !motion);
+  if (motionToggle) {
+    motionToggle.disabled = reduced.matches;
+    motionToggle.textContent = reduced.matches ? 'Reduced motion' : motion ? 'Pause motion' : 'Resume motion';
+    motionToggle.setAttribute('aria-pressed', String(!motion));
+  }
   if (!motion) {
     document.getAnimations().forEach(a => a.cancel());
     $$('.magnetic').forEach(el => el.style.removeProperty('transform'));
@@ -23,7 +30,8 @@ function syncMotion() {
   }
   schedule();
 }
-reduced.addEventListener('change', e => { motion = !e.matches; syncMotion(); });
+reduced.addEventListener('change', syncMotion);
+motionToggle?.addEventListener('click', () => { userMotion = !userMotion; syncMotion(); });
 syncMotion();
 // Animate the already-visible content; script failure never conceals information.
 const observer = new IntersectionObserver(entries => {
