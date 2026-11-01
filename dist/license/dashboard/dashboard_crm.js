@@ -18,17 +18,17 @@ Object.assign(viewCopy, {
 Object.assign(labels,{paid:'Received',pending:'Pending',refunded:'Refunded',cancelled:'Cancelled',donation:'Donation',premium:'Premium',plan:'Plan',title:'Custom title',pix:'Pix',wise:'Wise',crypto:'Crypto',bank:'Bank transfer',cash:'Cash',other:'Other'});
 opLabels['premium.approve']='Premium Pix receipt confirmed';
 Object.assign(opLabels,{'license.create':'Key created','license.update':'Customer updated','license.rename':'Key renamed','license.change_id':'Key ID changed','license.delete':'Key deleted','license.reset_device':'Device binding reset','license.rotate':'Activation key replaced','license.verify':'Device verified','finance.save':'Income saved','finance.trash':'Income moved to trash','finance.restore':'Income restored','plan.save':'Sales plan saved','discord.update':'Discord update published','vm.configure':'Terminal channel changed','vm.exec':'Owner command run'});
-opLabels['crm.stage']='Customer stage changed';
+opLabels['crm.role']='Customer role changed';
 
 let financeData=null, financePage=1, financeLoadedAt=0, financeSequence=0, financeController=null;
 let overviewLedger=null, overviewLedgerAt=0, overviewLedgerBusy=false, overviewLedgerPromise=null;
 let discordData=null, discordLoadedAt=0, discordBusy=false;
 let editorSubmit=null, editorKind='', editorRevision=0, secretKeys=[], profileRequest=0, filterTimer;
-const boardStages=['lead','customer','supporter','follow_up','inactive'];
+const boardStages=['Member','Partner','Collaborator','Supporter','Owner'];
 const boardLimits=Object.fromEntries(boardStages.map(stage=>[stage,40]));
 let boardDragged=null, boardMoving=false;
 const detailCache=new Map();
-const roles=['Member','Collaborator','Supporter','Owner'];
+const roles=['Member','Partner','Collaborator','Supporter','Owner'];
 const crmLabels={customer:'Customer',lead:'Lead',supporter:'Supporter',follow_up:'Follow-up',inactive:'Inactive',one_time:'One-time',monthly:'Monthly',quarterly:'Quarterly',yearly:'Yearly',lifetime:'Lifetime',custom:'Custom'};
 const planList=()=>financeData?.plans||overviewLedger?.plans||[];
 const sessionCurrent=run=>run===generation&&Boolean(token)&&!$('app').hidden;
@@ -80,16 +80,16 @@ function renderKanban(){
  const matches=snapshot.players.filter(p=>(status==='all'||p.status===status)&&[p.id,p.label,p.kog_player,p.stats?.name,p.crm?.sales_plan,...(p.crm?.tags||[])].join(' ').toLocaleLowerCase().includes(query));
  $('kanban-summary').textContent=`${num(matches.length)} of ${num(snapshot.players.length)} customers`;
  $('kanban-board').innerHTML=boardStages.map(stage=>{
-  const items=matches.filter(p=>(p.crm?.stage||'customer')===stage).sort((a,b)=>(a.crm?.renewal_at||Infinity)-(b.crm?.renewal_at||Infinity)||a.label.localeCompare(b.label)||a.id-b.id);
-  const cards=items.slice(0,boardLimits[stage]).map(p=>`<article class="kanban-card" draggable="true" data-board-id="${p.id}"><div class="kanban-card-top"><span class="kanban-key">#${p.id}</span>${badge(p.status)}</div><h4>${openButton(p,p.label)}</h4><div class="kanban-card-meta"><span>${esc(p.crm?.sales_plan||p.role)}</span>${p.crm?.renewal_at?`<time datetime="${new Date(p.crm.renewal_at*1000).toISOString()}">Follow-up ${esc(date(p.crm.renewal_at))}</time>`:''}</div>${p.crm?.tags?.length?`<div class="kanban-tags">${p.crm.tags.slice(0,3).map(tag=>`<span>${esc(tag)}</span>`).join('')}</div>`:''}<label class="kanban-move">Move to<select data-board-move="${p.id}" aria-label="Move ${esc(p.label)} to stage">${selectOptions(boardStages,stage)}</select></label></article>`).join('');
+  const items=matches.filter(p=>p.role===stage).sort((a,b)=>(a.crm?.renewal_at||Infinity)-(b.crm?.renewal_at||Infinity)||a.label.localeCompare(b.label)||a.id-b.id);
+  const cards=items.slice(0,boardLimits[stage]).map(p=>`<article class="kanban-card" draggable="true" data-board-id="${p.id}"><div class="kanban-card-top"><span class="kanban-key">#${p.id}</span>${badge(p.status)}</div><h4>${openButton(p,p.label)}</h4><div class="kanban-card-meta"><span>${esc(p.crm?.sales_plan||p.role)}</span>${p.crm?.renewal_at?`<time datetime="${new Date(p.crm.renewal_at*1000).toISOString()}">Follow-up ${esc(date(p.crm.renewal_at))}</time>`:''}</div>${p.crm?.tags?.length?`<div class="kanban-tags">${p.crm.tags.slice(0,3).map(tag=>`<span>${esc(tag)}</span>`).join('')}</div>`:''}<label class="kanban-move">Move to<select data-board-move="${p.id}" aria-label="Change ${esc(p.label)} role">${selectOptions(boardStages,stage)}</select></label></article>`).join('');
   return `<section class="kanban-column" data-board-stage="${stage}" aria-label="${esc(labelFor(stage))}, ${items.length} customers"><header><h3>${esc(labelFor(stage))}</h3><span>${num(items.length)}</span></header><div class="kanban-column-body">${cards||'<p class="kanban-empty">No customers in this stage.</p>'}${items.length>boardLimits[stage]?`<button class="kanban-more" data-board-more="${stage}">Show ${num(Math.min(40,items.length-boardLimits[stage]))} more</button>`:''}</div></section>`;
  }).join('');
 }
 async function moveBoardCustomer(id,stage,control){
  const customer=snapshot?.players.find(p=>p.id===id);
- if(boardMoving||!customer||!boardStages.includes(stage)||stage===(customer.crm?.stage||'customer'))return;
+ if(boardMoving||!customer||!boardStages.includes(stage)||stage===customer.role)return;
  boardMoving=true;
- try{const result=await operate({action:'crm.stage',license_id:id,stage},control);if(!result&&snapshot)renderKanban();}
+ try{const result=await operate({action:'crm.role',license_id:id,role:stage},control);if(!result&&snapshot)renderKanban();}
  finally{boardMoving=false;}
 }
 const board=$('kanban-board');
