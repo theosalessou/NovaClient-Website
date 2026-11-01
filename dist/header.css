@@ -13,6 +13,7 @@
 .site-header .discord-signin svg{width:19px;height:19px;fill:#b185dc;stroke:none;filter:drop-shadow(0 0 6px #8c5cc74d)}
 .header-player-name{max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .header-player-role{padding:2px 6px;border-radius:4px;background:#8c5cc724;color:#c8addf;font-size:10px}
+
 .site-header .header-download{display:inline-flex;align-items:center;gap:22px;min-height:48px;padding:12px 22px;border:1px solid #ffffff30;border-radius:100px;font-size:14px;color:#f2edf8;text-decoration:none;white-space:nowrap}
 .site-header .header-download:hover{color:#c8addf;border-color:#8c5cc766}
 .site-header .header-signout{display:grid;place-items:center;background:transparent;border:1px solid #ffffff18;border-radius:8px;width:36px;min-height:36px;padding:8px;color:#c0b6cd;cursor:pointer}
@@ -22,3 +23,17 @@
 @media(max-width:850px){.site-header.frame{flex-wrap:wrap;gap:10px;padding-top:16px;padding-bottom:10px}.site-header .icon-nav{order:3;width:100%}.site-header .header-actions{gap:7px}.site-header .header-download{padding:10px 14px;font-size:12px;min-height:42px}.site-header .discord-signin{font-size:11px}.header-player-name{max-width:100px}.header-player-role{display:none}.site-header .icon-nav a{width:44px;height:44px}.site-header .header-download span{display:none}}
 @media(max-width:420px){.site-header .brand{font-size:19px}.site-header .header-download{padding:8px 10px;font-size:11px}.site-header .discord-signin{padding:8px}.site-header .header-signout{width:30px;padding:5px}.header-player-name{max-width:80px}}
 @media(prefers-reduced-motion:reduce){.site-header *{transition:none!important}}
+
+/* One clear navigation row across the landing and player pages. */
+.site-header.frame{min-height:76px;gap:24px;padding-block:12px}
+.site-header .icon-nav{gap:2px;padding:4px;border:1px solid #ffffff16;border-radius:12px;background:#100b18b8}
+.site-header .icon-nav a{display:flex;gap:8px;width:auto;min-width:44px;height:40px;padding:0 11px;border-radius:8px;font-size:12px;text-decoration:none;white-space:nowrap}
+.site-header .icon-nav svg{width:17px;height:17px;flex:none}
+.site-header .nav-tooltip{position:static;transform:none;opacity:1;padding:0;border:0;background:transparent;color:inherit;pointer-events:auto;font-size:12px}
+.site-header .icon-nav a:hover .nav-tooltip,.site-header .icon-nav a:focus-visible .nav-tooltip{transform:none}
+.site-header .header-actions{gap:8px}
+.site-header .discord-signin,.site-header .header-download{min-height:44px;padding:10px 14px;border-radius:9px}
+.site-header .header-download{white-space:nowrap}
+.site-header .header-signout{min-width:44px;min-height:44px}
+@media(max-width:900px){.site-header.frame{flex-wrap:wrap;gap:8px}.site-header .icon-nav{order:3;width:100%;justify-content:center}.site-header .header-actions{margin-left:auto}}
+@media(max-width:560px){.site-header.frame{padding-inline:max(14px,env(safe-area-inset-left)) max(14px,env(safe-area-inset-right))}.site-header .brand{font-size:19px}.site-header .icon-nav{justify-content:space-between}.site-header .icon-nav a{padding:0 8px;font-size:11px}.site-header .nav-tooltip{font-size:11px}.site-header .discord-signin,.site-header .header-download{font-size:11px;padding:8px 10px}.site-header .header-player-role{display:none}}

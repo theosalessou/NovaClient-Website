@@ -94,3 +94,5 @@ html:not(.orbit-enhanced) .model-chapter{min-height:0;padding:32px 24px}html:not
 .motion-off.download-stop .model-copy,.motion-off.download-stop .station-body{max-height:none}
 
 .tip-pair .model-copy .product-heading{margin:0 0 16px;font-size:28px;font-weight:550;line-height:1.15;letter-spacing:-.025em}.station-body .product-summary{font-size:15px;line-height:1.65;color:#eee0f7}@media(max-width:799px){.tip-pair .model-copy .product-heading{font-size:21px;margin-bottom:8px}.station-body .product-summary{font-size:14px}}
+
+@media(max-width:799px){.site-header .icon-nav a{width:auto;min-width:44px;height:44px}.site-header .icon-nav{justify-content:space-between}.site-header .nav-tooltip{position:static;transform:none;opacity:1;padding:0;border:0;background:transparent;font-size:11px}}
