@@ -1,4 +1,4 @@
-import { composeJourney, orbitCard } from './emblem-journey.js?v=11';
+import { composeJourney, orbitCard } from './emblem-journey.js?v=12';
 const canvas=document.querySelector('#nova-scene'),wrap=canvas.parentElement;
 const story=document.querySelector('#anatomy'),root=document.documentElement;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -87,7 +87,7 @@ function attachText({planeBounds=null,media=null,source=null,caption='',matrix,w
 async function sync(){
  if(controller){controller.setActive(enabled());pose();return;}
  if(!enabled()||loading||failed)return;loading=true;
- try{const {createEmblem}=await import('./nova-emblem.js?v=18');if(!enabled())return;controller=createEmblem(canvas,{onFrame:attachText});controller.setActive(true);pose();}
+ try{const {createEmblem}=await import('./nova-emblem.js?v=19');if(!enabled())return;controller=createEmblem(canvas,{onFrame:attachText});controller.setActive(true);pose();}
  catch(error){failed=true;wrap.classList.remove('webgl-ready');console.warn('Nova 3D unavailable; using the transparent emblem.',error);}
  finally{loading=false;}
 }

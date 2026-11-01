@@ -1,5 +1,5 @@
 import * as THREE from './assets/vendor/three.module.js';
-import { cameraDistance, cinematicFlight } from './emblem-journey.js?v=11';
+import { cameraDistance, cinematicFlight } from './emblem-journey.js?v=12';
 // A transparent viewport with a bounded backing buffer, never a cropped square.
 export function createEmblem(canvas,{onFrame=()=>{}}={}){
  const compact=innerWidth<800||innerHeight<560;
