@@ -79,3 +79,10 @@ html:not(.orbit-enhanced) .model-chapter{min-height:0;padding:32px 24px}html:not
 @media(max-width:799px) and (orientation:landscape){.tip-pair .scene-wrap.scene-traveller{transform:translateZ(0)!important}.model-chapter-nav{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));max-width:calc(100vw - 260px)}.site-header .icon-nav{display:none}.tip-pair .orbital-world .model-copy{max-height:calc(100svh - 160px)}.tip-pair .station-body{max-height:calc(100svh - 225px)}}
 .motion-off.tip-pair .scene-wrap.scene-traveller{transform:translateZ(0)!important}.motion-off.tip-pair .model-copy,.motion-off.tip-pair .station-body{max-height:none}
 @media(prefers-reduced-motion:reduce){.tip-pair .model-copy,.tip-pair .station-body{max-height:none}}
+
+/* Ten richer stations: larger text measures and more visible body copy. */
+.model-chapter{min-height:94svh}.tip-pair .orbital-world .model-copy{max-height:min(610px,calc(76svh - 96px));padding:22px 24px}.tip-pair .station-body{max-height:min(490px,calc(76svh - 185px));font-size:15px}.tip-pair .station-body p{font-size:15px;line-height:1.6}.station-body h4{font-size:16px;font-weight:550;margin:26px 0 12px}
+@media(min-width:1000px){.tip-pair .orbital-world .model-copy{width:390px!important}}
+@media(max-width:799px){.model-chapter{min-height:94svh}.tip-pair .orbital-world .model-copy{max-height:calc((45svh - 52px)/2);padding:10px 14px}.tip-pair .station-body{max-height:calc((45svh - 138px)/2)}.tip-pair .station-body p{font-size:14px}.tip-pair .model-copy h3{font-size:18px}}
+.motion-off .model-chapter{min-height:0}.motion-off.tip-pair .model-copy,.motion-off.tip-pair .station-body{max-height:none}
+@media(prefers-reduced-motion:reduce){.model-chapter{min-height:0}.tip-pair .model-copy,.tip-pair .station-body{max-height:none}}

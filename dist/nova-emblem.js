@@ -4,7 +4,7 @@ import { cameraDistance, cinematicFlight } from './emblem-journey.js?v=11';
 export function createEmblem(canvas,{onFrame=()=>{}}={}){
  const compact=innerWidth<800||innerHeight<560;
  const constrained=compact||(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4;
- let budget=constrained?512:640;
+ let budget=constrained?640:1024;
  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:!constrained,powerPreference:'low-power'});
  renderer.setClearColor(0x000000,0);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.90;
@@ -14,7 +14,7 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
  shape.bezierCurveTo(-.22,-.8,-.8,-.24,-2.7,0);shape.bezierCurveTo(-.8,.28,-.22,.8,0,2.7);
  const hole=new THREE.Path();hole.moveTo(0,1.42);hole.bezierCurveTo(-.12,.4,-.4,.12,-1.42,0);
  hole.bezierCurveTo(-.4,-.12,-.12,-.4,0,-1.42);hole.bezierCurveTo(.12,-.4,.4,-.12,1.42,0);hole.bezierCurveTo(.4,.12,.12,.4,0,1.42);shape.holes.push(hole);
- const geo=new THREE.ExtrudeGeometry(shape,{depth:.24,bevelEnabled:true,bevelThickness:.10,bevelSize:.075,bevelSegments:constrained?2:5,curveSegments:constrained?16:40});geo.center();
+ const geo=new THREE.ShapeGeometry(shape,constrained?32:64);geo.center();
  // A self-luminous stellar surface, not polished plastic: no specular model.
  const stellarUniforms={uTime:{value:0},uColor:{value:new THREE.Color(0x8733bb)},uEnergy:{value:1}};
  const stellarVertex=`varying vec3 vPosition;varying vec3 vNormal;varying vec3 vView;
@@ -22,24 +22,22 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
  const material=new THREE.ShaderMaterial({uniforms:stellarUniforms,vertexShader:stellarVertex,fragmentShader:`
  uniform float uTime;uniform float uEnergy;uniform vec3 uColor;varying vec3 vPosition;varying vec3 vNormal;varying vec3 vView;
  void main(){
-  float field=sin(vPosition.x*5.0+sin(vPosition.y*4.0-uTime*.28))*sin(vPosition.y*6.0+uTime*.24);
-  float grain=sin(vPosition.x*31.0+sin(vPosition.y*23.0))*sin(vPosition.y*27.0-uTime*.18);
-  float rim=pow(1.0-abs(dot(normalize(vNormal),normalize(vView))),2.2);
-  float vein=pow(.5+.5*sin(vPosition.x*8.0+vPosition.y*4.0+field*2.0-uTime*.38),7.0);
-  vec3 nebula=mix(vec3(.055,.008,.12),uColor*.82,.46+field*.12+grain*.035);
-  vec3 emission=nebula+vec3(.40,.15,.66)*vein*.38+vec3(.72,.46,.95)*rim*.68;
-  float veil=.10+rim*.42+vein*.16+(.5+.5*field)*.06;
+  float field=sin(vPosition.x*1.4+uTime*.12)*cos(vPosition.y*1.2-uTime*.09);
+  float radius=length(vPosition.xy);float core=exp(-radius*radius*.20);
+  vec3 emission=uColor*(.70+field*.08)+vec3(.18,.045,.32)*core;
+  float veil=.16+core*.14+field*.025;
   gl_FragColor=vec4(emission*uEnergy,veil);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
- }`,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+ }`,transparent:true,side:THREE.DoubleSide,forceSinglePass:true,depthWrite:false,blending:THREE.AdditiveBlending});
  // Keep the existing damped color API while shading through an emission uniform.
  material.color=stellarUniforms.uColor.value;
  const star=new THREE.Mesh(geo,material);star.name='nova-emblem';star.renderOrder=2;group.add(star);
- const corona=new THREE.Mesh(geo,new THREE.ShaderMaterial({uniforms:stellarUniforms,vertexShader:stellarVertex,transparent:true,side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,fragmentShader:`
- uniform float uTime;varying vec3 vNormal;varying vec3 vView;varying vec3 vPosition;
- void main(){float edge=pow(1.0-abs(dot(normalize(vNormal),normalize(vView))),2.6);float flow=.82+.18*sin(vPosition.y*3.0+vPosition.x*2.0-uTime*.7);gl_FragColor=vec4(.51,.23,.83,edge*flow*.22);}` }));
- corona.name='stellar-corona';corona.scale.setScalar(1.065);group.add(corona);
+ const haloCanvas=document.createElement('canvas');haloCanvas.width=haloCanvas.height=512;const haloContext=haloCanvas.getContext('2d');
+ function haloPath(){haloContext.beginPath();for(const path of[shape,hole]){const points=path.getPoints(100);points.forEach((p,i)=>{const x=256+p.x*64,y=256-p.y*64;if(i===0)haloContext.moveTo(x,y);else haloContext.lineTo(x,y);});haloContext.closePath();}}
+ for(const [blur,alpha]of[[22,.65],[9,.35]]){haloContext.filter='blur('+blur+'px)';haloContext.fillStyle='rgba(158,65,232,'+alpha+')';haloPath();haloContext.fill('evenodd');}
+ const haloTexture=new THREE.CanvasTexture(haloCanvas);haloTexture.colorSpace=THREE.SRGBColorSpace;
+ const corona=new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshBasicMaterial({map:haloTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,opacity:.85}));corona.name='stellar-corona';corona.position.z=.01;corona.renderOrder=3;group.add(corona);
  const ringMaterial=new THREE.MeshBasicMaterial({color:0xa974d6,transparent:true,opacity:.30,depthWrite:false});
  const ring=new THREE.Mesh(new THREE.TorusGeometry(3.4,.028,constrained?8:12,constrained?56:112),ringMaterial);ring.rotation.set(.55,.3,-.65);ring.scale.set(1.1,.94,1);group.add(ring);
  const orbitMaterial=new THREE.MeshBasicMaterial({color:0xa161c8,transparent:true,opacity:.20,depthWrite:false});
@@ -88,7 +86,7 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
  }
  function resize(){
   const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);
-  const scale=Math.min(1,Math.sqrt(budget*budget/(w*h)),1280/w,900/h);
+  const scale=Math.min(Math.min(devicePixelRatio||1,constrained?1.25:1.5),Math.sqrt(budget*budget/(w*h)),1920/w,1440/h);
   renderer.setSize(Math.max(1,Math.floor(w*scale)),Math.max(1,Math.floor(h*scale)),false);
   camera.aspect=w/h;camera.position.set(0,0,cameraDistance(camera.aspect));camera.updateProjectionMatrix();
   group.position.y=(w<800||h<560)?camera.position.z*Math.tan(Math.PI/10)*(camera.aspect<.9?.25:.07):.25;
@@ -96,13 +94,13 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
  }
  function draw(time){
   frame=0;if(!active||disposed)return;const frameStarted=performance.now();
-  const gap=lastTime?time-lastTime:0,late=continuing&&gap>42&&gap<250;
-  const dt=lastTime?Math.min(.05,gap/1000):1/60;lastTime=time;const ease=1-Math.exp(-5.5*dt);let error=0;
+  const gap=lastTime?time-lastTime:0,late=(continuing||passiveAllowed&&!constrained&&budget>512)&&gap>42&&gap<250;
+  const dt=lastTime?Math.min(.05,gap/1000):1/60;lastTime=time;const ease=1-Math.exp(-7*dt);let error=0;
   for(const key of['x','y','z','energy','phase','zoom','fx','fy','fz','reveal','flight']){current[key]+=(target[key]-current[key])*ease;error+=Math.abs(target[key]-current[key]);}
   material.color.lerp(targetColor,ease);error+=Math.abs(material.color.r-targetColor.r)+Math.abs(material.color.g-targetColor.g)+Math.abs(material.color.b-targetColor.b);
   const settling=error>.001;if(!settling){for(const key of['x','y','z','energy','phase','zoom','fx','fy','fz','reveal','flight'])current[key]=target[key];material.color.copy(targetColor);}
   if(dirty||settling){
-   if(passiveAllowed&&!constrained&&budget>512)drift+=dt;
+   if(passiveAllowed&&!constrained&&budget>512)drift+=dt*1.2;
    const breathing=1+Math.sin(drift*.9)*.07;
    stellarUniforms.uTime.value=drift+current.phase;
    dust.rotation.set(Math.sin(drift*.12)*.12,drift*.045,current.phase*.08);
@@ -121,7 +119,7 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
    const previousOrientation=camera.quaternion.clone();
    camera.position.set(focus.x,focus.y,focus.z+distance);
    camera.lookAt(focus);camera.zoom=current.zoom;
-   if(current.flight>=0){if(current.flight<.44)transitOrigin=1;else if(current.flight>.68)transitOrigin=-1;const path=cinematicFlight(current.flight,distance);camera.position.copy(new THREE.Vector3(...path.position).applyMatrix4(group.matrixWorld));if(current.flight<.44||current.flight>=.68){camera.lookAt(new THREE.Vector3(...path.look).applyMatrix4(group.matrixWorld));}else camera.quaternion.copy(group.quaternion).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,path.yaw,path.roll)));if(transitOrigin<0){const weight=Math.min(1,Math.max(0,(current.flight-.36)/.08))*Math.min(1,Math.max(0,(.76-current.flight)/.08));const forward=new THREE.Quaternion().copy(group.quaternion).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,-path.roll)));camera.quaternion.slerp(forward,weight);}const desired=camera.quaternion.clone();if(flightInitialized)camera.quaternion.copy(previousOrientation).slerp(desired,1-Math.exp(-4.5*dt));else camera.quaternion.copy(desired);flightInitialized=true;camera.zoom=1;}
+   if(current.flight>=0){if(current.flight<.44)transitOrigin=1;else if(current.flight>.68)transitOrigin=-1;const path=cinematicFlight(current.flight,distance);camera.position.copy(new THREE.Vector3(...path.position).applyMatrix4(group.matrixWorld));if(current.flight<.44||current.flight>=.68){camera.lookAt(new THREE.Vector3(...path.look).applyMatrix4(group.matrixWorld));}else camera.quaternion.copy(group.quaternion).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,path.yaw,path.roll)));if(transitOrigin<0){const weight=Math.min(1,Math.max(0,(current.flight-.36)/.08))*Math.min(1,Math.max(0,(.76-current.flight)/.08));const forward=new THREE.Quaternion().copy(group.quaternion).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,-path.roll)));camera.quaternion.slerp(forward,weight);}const desired=camera.quaternion.clone();if(flightInitialized)camera.quaternion.copy(previousOrientation).slerp(desired,1-Math.exp(-6*dt));else camera.quaternion.copy(desired);flightInitialized=true;camera.zoom=1;}
    camera.updateProjectionMatrix();
    // The real feature surface travels with the physical detail being explored.
    board.position.set(current.fx-.60,current.fy+(innerWidth<800?1.12:.28),.80);
@@ -134,7 +132,7 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
 
    camera.updateMatrixWorld(true);group.updateMatrixWorld(true);
    // The DOM planes use the exact model/view/projection matrices, not an unrelated orbit.
-   const width=Math.min(innerWidth<800?innerWidth-48:350,350),height=current.flight>=0?Math.min(innerHeight-190,440):280;
+   const width=innerWidth>=1000?390:Math.min(innerWidth<800?innerWidth-48:350,350),height=current.flight>=0?Math.min(innerHeight-190,440):280;
    const units=2*distance*Math.tan(Math.PI/10)/(current.zoom*innerHeight);
    const local=new THREE.Matrix4().makeTranslation(current.fx+(innerWidth<800?0:.92),current.fy-(innerWidth<800?1.12:.48),1.05);
    const basis=new THREE.Matrix4().makeScale(units,-units,units);

@@ -19,13 +19,14 @@ const library=document.querySelector('#reference');
 const panelOpen=()=>root.classList.contains('panel-open');
 let controller=null,loading=false,failed=false,suspended=false,frame=0,dirty=true,current=null,destination,lastTime=0;
 let px=0,py=0,energy=0,lastRoute=0,activeTip=0;
+const groupCount=cards.length===10?5:8;
 const tipStops=[.10,.20,.30,.40,.74,.83,.92,1];
 const still=()=>reduced.matches||root.classList.contains('motion-off');
 const enabled=()=>!document.hidden&&!suspended&&!still()&&!panelOpen()&&!navigator.connection?.saveData;
 function layout(){
  const r=story.getBoundingClientRect();
  destination=composeJourney({width:innerWidth,height:innerHeight,hero:anchor.getBoundingClientRect(),story:r,scroll:scrollY,still:still(),reading:library?.open});
- if(cards.length>4){const t=Math.max(0,Math.min(1,-r.top/Math.max(1,r.height-innerHeight)));destination.progress=t*(cards.length-1);const card=cards[Math.round(destination.progress)];destination.part=card.dataset.stationId||'';const near=tipStops.findIndex(stop=>Math.abs(stop-t)<.035);if(near>=0)activeTip=near;destination.pose.flight=t;destination.pose.feature=Number(card.dataset.feature||0);destination.pose.zoom=1;destination.pose.fx=destination.pose.fy=destination.pose.fz=0;}
+ if(cards.length>4){const t=Math.max(0,Math.min(1,-r.top/Math.max(1,r.height-innerHeight)));destination.progress=t*(cards.length-1);const card=cards[Math.round(destination.progress)];destination.part=card.dataset.stationId||'';const near=tipStops.findIndex(stop=>Math.abs(stop-t)<.035);if(near>=0)activeTip=cards.length===10?[0,1,1,2,2,3,3,4][near]:near;destination.pose.flight=t;destination.pose.feature=Number(card.dataset.feature||0);destination.pose.zoom=1;destination.pose.fx=destination.pose.fy=destination.pose.fz=0;}
  destination.entry=Math.min(1,Math.max(0,(innerHeight*.85-r.top)/(innerHeight*.55)));
  destination.exit=Math.min(1,Math.max(0,(r.top+r.height-innerHeight*.1)/(innerHeight*.4)));
  root.dataset.modelZone=destination.inStory?'story':'page';
@@ -39,7 +40,7 @@ function update(time){
  if(dirty){layout();dirty=false;}
  if(!current)current={progress:destination.progress,opacity:destination.opacity,phase:destination.pose.phase,entry:destination.entry,exit:destination.exit};
  const dt=lastTime?Math.min(.05,(time-lastTime)/1000):1/60;lastTime=time;
- const ease=still()?1:1-Math.exp(-10*dt);let settling=false;
+ const ease=still()?1:1-Math.exp(-12*dt);let settling=false;
  for(const key of ['progress','opacity','phase','entry','exit']){
   const target=key==='phase'?destination.pose.phase:destination[key];current[key]+=(target-current[key])*ease;
   if(Math.abs(target-current[key])>.0004)settling=true;else current[key]=target;
@@ -66,17 +67,17 @@ function update(time){
 // Text is a plane in the model coordinate system, projected by the real camera.
 function attachText({planeBounds=null,media=null,source=null,caption='',matrix,width,feature,reveal,illumination=0,lightAngle=0}){
  if(still())return;
- const route=document.querySelector('#orbit-route');if(cards.length>4&&route)route.value=cards[Math.min(cards.length-1,Math.ceil(activeTip*cards.length/8))].dataset.stationId;
+ const route=document.querySelector('#orbit-route');if(cards.length>4&&route)route.value=cards[Math.min(cards.length-1,Math.ceil(activeTip*cards.length/groupCount))].dataset.stationId;
  mediaTarget.hidden=!media||root.classList.contains('atlas-open')||panelOpen();
  if(media){hoveredMedia={src:'./assets/features/'+source,alt:caption};mediaTarget.style.left=media.left+'px';mediaTarget.style.top=media.top+'px';mediaTarget.style.width=(media.right-media.left)+'px';mediaTarget.style.height=(media.bottom-media.top)+'px';}
  world.style.perspective='none';if(cards.length>4&&!root.classList.contains('flight-ready'))root.classList.add('flight-ready');if(cards.length>4&&!root.classList.contains('tip-pair'))root.classList.add('tip-pair');
  cards.forEach((card,i)=>{
   const flight=destination.pose.flight;const crossing=cards.length>4&&flight>.44&&flight<.68;
-  const group=Math.min(7,Math.floor(i*8/cards.length));const visible=cards.length>4?group===activeTip&&!crossing:i===feature&&destination.inStory&&reveal>.98;
+  const group=Math.min(groupCount-1,Math.floor(i*groupCount/cards.length));const visible=cards.length>4?group===activeTip&&!crossing:i===feature&&destination.inStory&&reveal>.98;
   if(cards.length>4&&!visible&&card.style.visibility==='hidden')return;
   if(card.style.width!==width+'px')card.style.width=width+'px';card.style.transformOrigin='0 0';
   card.style.setProperty('--stellar-spill',String(illumination));card.style.setProperty('--stellar-angle',lightAngle+'deg');
-  let offset='';if(cards.length>4&&planeBounds){const members=cards.map((_,j)=>j).filter(j=>Math.min(7,Math.floor(j*8/cards.length))===activeTip),rank=members.indexOf(i),mobile=innerWidth<800&&innerHeight>=560;const x=mobile?24:rank===0?28:innerWidth-planeBounds.width-28;const y=mobile?Math.max(174,innerHeight*.49)+rank*((innerHeight*.45-70)/2+10):Math.max(110,innerHeight*.24);offset=`translate3d(${x-planeBounds.left}px,${y-planeBounds.top}px,0) `;}card.style.transform=offset+'matrix3d('+matrix.join(',')+')';
+  let offset='';if(cards.length>4&&planeBounds){const members=cards.map((_,j)=>j).filter(j=>Math.min(groupCount-1,Math.floor(j*groupCount/cards.length))===activeTip),rank=members.indexOf(i),mobile=innerWidth<800&&innerHeight>=560;const x=mobile?24:rank===0?28:innerWidth-planeBounds.width-28;const y=mobile?Math.max(174,innerHeight*.49)+rank*((innerHeight*.45-70)/2+10):Math.max(110,innerHeight*.24);offset=`translate3d(${x-planeBounds.left}px,${y-planeBounds.top}px,0) `;}card.style.transform=offset+'matrix3d('+matrix.join(',')+')';
   card.style.opacity=visible?'1':'0';card.style.visibility=visible?'visible':'hidden';
   card.inert=!visible;if(visible)card.removeAttribute('aria-hidden');else card.setAttribute('aria-hidden','true');
  });
@@ -84,7 +85,7 @@ function attachText({planeBounds=null,media=null,source=null,caption='',matrix,w
 async function sync(){
  if(controller){controller.setActive(enabled());pose();return;}
  if(!enabled()||loading||failed)return;loading=true;
- try{const {createEmblem}=await import('./nova-emblem.js?v=17');if(!enabled())return;controller=createEmblem(canvas,{onFrame:attachText});controller.setActive(true);pose();}
+ try{const {createEmblem}=await import('./nova-emblem.js?v=18');if(!enabled())return;controller=createEmblem(canvas,{onFrame:attachText});controller.setActive(true);pose();}
  catch(error){failed=true;wrap.classList.remove('webgl-ready');console.warn('Nova 3D unavailable; using the transparent emblem.',error);}
  finally{loading=false;}
 }
