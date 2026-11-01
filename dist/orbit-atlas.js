@@ -1,0 +1,12 @@
+(()=>{'use strict';
+const root=document.documentElement,focus=document.querySelector('#orbit-image-focus'),image=focus.querySelector('img'),route=document.querySelector('#orbit-route');let pinned=false,last=null;
+function hide(){focus.hidden=true;pinned=false;root.classList.remove('image-focused');}
+function show(src,alt,pin=false,trigger=null){image.src=src;image.alt=alt;focus.querySelector('p').textContent=alt;focus.hidden=false;pinned=pin;last=trigger;focus.classList.toggle('is-pinned',pin);root.classList.add('image-focused');if(pin)focus.querySelector('button').focus();}
+document.querySelectorAll('.atlas-image').forEach(b=>{const img=b.querySelector('img');b.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch'&&!pinned)show(img.src,img.alt);});b.addEventListener('pointerleave',()=>{if(!pinned)hide();});b.addEventListener('focus',()=>{if(!pinned)show(img.src,img.alt);});b.addEventListener('blur',()=>{if(!pinned)hide();});b.addEventListener('click',()=>show(img.src,img.alt,true,b));});
+focus.querySelector('button').addEventListener('click',()=>{hide();last?.focus();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!focus.hidden){hide();last?.focus();e.preventDefault();}});
+document.addEventListener('orbitimage',e=>{if(e.detail.action==='hide'){if(!pinned)hide();}else show(e.detail.src,e.detail.alt,e.detail.pinned);});
+const stops=[.10,.20,.30,.40,.74,.83,.92,1];
+function jump(){hide();const group=Math.min(7,Math.floor(route.selectedIndex*8/route.options.length)),story=document.querySelector('#anatomy'),r=story.getBoundingClientRect();scrollTo({top:scrollY+r.top+stops[group]*Math.max(1,r.height-innerHeight),behavior:root.classList.contains('motion-off')?'instant':'smooth'});}
+document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(!a)return;const url=new URL(a.href,location.href);if(url.origin!==location.origin||!url.hash)return;const index=[...route.options].findIndex(o=>o.value===url.hash.slice(1));if(index>=0){e.preventDefault();route.selectedIndex=index;jump();}});
+route.addEventListener('change',jump);for(const [selector,delta]of[['[data-route-prev]',-1],['[data-route-next]',1]])document.querySelector(selector).addEventListener('click',()=>{route.selectedIndex=Math.max(0,Math.min(route.options.length-1,route.selectedIndex+delta));jump();});
+})();
