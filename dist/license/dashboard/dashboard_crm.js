@@ -3,6 +3,7 @@
 Object.assign(viewCopy, {
  overview:['Overview','Workspace overview','Customers, access and operations, with the context to act.'],
  licenses:['Keys & customers','Keys & customers','Manage access and keep a complete record of every customer.'],
+ kanban:['Customer board','Customer pipeline','Follow every customer from first contact to follow-up.'],
  players:['Players','Community activity','Presence, shared statistics and the latest client activity.'],
  leaderboards:['Leaderboards','Community performance','Shared gameplay statistics, ranked by category.'],
  versions:['Versions','Client versions','Adoption and compatibility across the community.'],
@@ -17,11 +18,15 @@ Object.assign(viewCopy, {
 Object.assign(labels,{paid:'Received',pending:'Pending',refunded:'Refunded',cancelled:'Cancelled',donation:'Donation',premium:'Premium',plan:'Plan',title:'Custom title',pix:'Pix',wise:'Wise',crypto:'Crypto',bank:'Bank transfer',cash:'Cash',other:'Other'});
 opLabels['premium.approve']='Premium Pix receipt confirmed';
 Object.assign(opLabels,{'license.create':'Key created','license.update':'Customer updated','license.rename':'Key renamed','license.change_id':'Key ID changed','license.delete':'Key deleted','license.reset_device':'Device binding reset','license.rotate':'Activation key replaced','license.verify':'Device verified','finance.save':'Income saved','finance.trash':'Income moved to trash','finance.restore':'Income restored','plan.save':'Sales plan saved','discord.update':'Discord update published','vm.configure':'Terminal channel changed','vm.exec':'Owner command run'});
+opLabels['crm.stage']='Customer stage changed';
 
 let financeData=null, financePage=1, financeLoadedAt=0, financeSequence=0, financeController=null;
 let overviewLedger=null, overviewLedgerAt=0, overviewLedgerBusy=false, overviewLedgerPromise=null;
 let discordData=null, discordLoadedAt=0, discordBusy=false;
 let editorSubmit=null, editorKind='', editorRevision=0, secretKeys=[], profileRequest=0, filterTimer;
+const boardStages=['lead','customer','supporter','follow_up','inactive'];
+const boardLimits=Object.fromEntries(boardStages.map(stage=>[stage,40]));
+let boardDragged=null, boardMoving=false;
 const detailCache=new Map();
 const roles=['Member','Collaborator','Supporter','Owner'];
 const crmLabels={customer:'Customer',lead:'Lead',supporter:'Supporter',follow_up:'Follow-up',inactive:'Inactive',one_time:'One-time',monthly:'Monthly',quarterly:'Quarterly',yearly:'Yearly',lifetime:'Lifetime',custom:'Custom'};
@@ -40,18 +45,20 @@ operate=async function(body,button){detailCache.clear();financeLoadedAt=0;overvi
 const originalKoG=renderKoG;
 renderKoG=function(){originalKoG();$('kog-broadcasts').insertAdjacentHTML('beforeend',operations().broadcasts.map(b=>`<button data-kog-download="${esc(b.player)}">Download ${esc(b.player)} profile JSON</button>`).join(''));};
 const originalOperationsView=renderOperationsView;
-renderOperationsView=function(id){if(id==='finance')loadFinance();else if(id==='plans')renderPlans();else if(id==='commands'){renderCommandDirectory();loadDiscord();}else originalOperationsView(id);};
+renderOperationsView=function(id){if(id==='kanban')renderKanban();else if(id==='finance')loadFinance();else if(id==='plans')renderPlans();else if(id==='commands'){renderCommandDirectory();loadDiscord();}else originalOperationsView(id);};
 const originalOverview=renderOverview;
 renderOverview=function(){originalOverview();renderCrmOverview();loadOverviewLedger();};
 const originalSetView=setView;
-setView=function(next){originalSetView(next);$('metrics').hidden=next!=='overview';document.querySelector('.sidebar').classList.remove('mobile-open');$('nav-toggle')?.setAttribute('aria-expanded','false');};
+setView=function(next){originalSetView(next);$('metrics').hidden=next!=='overview';if(next==='kanban')$('period').closest('label').hidden=true;document.querySelector('.sidebar').classList.remove('mobile-open');$('nav-toggle')?.setAttribute('aria-expanded','false');};
 const originalLogout=logout;
 logout=function(message=''){
  financeSequence++;financeController?.abort();financeData=null;overviewLedger=null;overviewLedgerAt=0;discordData=null;discordLoadedAt=0;detailCache.clear();profileRequest++;
  overviewLedgerBusy=false;overviewLedgerPromise=null;discordBusy=false;networkController?.abort();networkData=null;networkLoadedAt=0;
+ boardDragged=null;boardMoving=false;for(const stage of boardStages)boardLimits[stage]=40;
  if($('operation-confirm').open)$('operation-confirm').close('cancel');
  if($('crm-editor').open)$('crm-editor').close();if($('crm-secret').open)$('crm-secret').close();
- for(const id of ['crm-overview','finance-summary','finance-chart','finance-breakdown','finance-table','plans-table','crm-command-directory','discord-update-channel'])$(id).replaceChildren();
+ for(const id of ['crm-overview','kanban-board','finance-summary','finance-chart','finance-breakdown','finance-table','plans-table','crm-command-directory','discord-update-channel'])$(id).replaceChildren();
+ $('kanban-summary').textContent='';$('kanban-search').value='';$('kanban-status').value='all';
  $('crm-terminal-output').textContent='No command run in this session.';$('discord-update-form').reset();$('crm-terminal-form').reset();$('discord-publish-result').replaceChildren();
  for(const id of ['premium-orders','network-table','network-services','host-metrics','blocked-ips','kog-jobs','kog-broadcasts','title-catalog','title-assignments','assign-title','assign-license','admin-audit','title-editors'])$(id).replaceChildren();
  $('premium-admin-status').textContent='Sign in to load Premium orders.';$('operation-toast').hidden=true;
@@ -67,6 +74,31 @@ filteredLicenses=function(){
  return snapshot.players.filter(p=>(status==='all'||p.status===status)&&(role==='all'||p.role===role)&&(stage==='all'||p.crm?.stage===stage)&&[p.id,p.label,p.name,p.stats?.name,p.version,p.role,p.linked_discord_id,p.kog_player,p.crm?.sales_plan,...(p.crm?.tags||[])].join(' ').toLowerCase().includes(query)).sort((a,b)=>sort==='activity'?(b.last_seen||0)-(a.last_seen||0)||b.id-a.id:sort==='oldest'?a.id-b.id:sort==='label'?a.label.localeCompare(b.label):b.id-a.id);
 };
 renderLicenses=function(){table('licenses-table',['Customer / key','Access','Role / stage','Linked identity','Sales plan / renewal','Latest activity','Actions'],filteredLicenses().map(p=>`<tr><td><div class="customer-cell">${avatar(p.label,p.role)}<div>${openButton(p,p.label)}<small>Key #${p.id}${p.crm?.tags?.length?' · '+p.crm.tags.map(esc).join(' · '):''}</small></div></div></td><td>${badge(p.status)}<small>${p.expires_at?date(p.expires_at):'No expiration'}</small></td><td>${badge(p.role)}<small>${esc(labelFor(p.crm?.stage||'customer'))}</small></td><td><span>${esc(p.kog_player||p.stats?.name||'Not linked')}</span><small>${esc(p.linked_discord_id||'No Discord account')}</small></td><td>${esc(p.crm?.sales_plan||'No sales plan')}<small>${p.crm?.renewal_at?'Renewal '+date(p.crm.renewal_at):'—'}</small></td><td>${p.online?badge(p.state):esc(datetime(p.last_seen))}<small>${esc(p.version||'Not reported')}</small></td><td><div class="table-actions"><button data-license-edit="${p.id}">Edit</button><button data-open="${p.id}">Details</button></div></td></tr>`),'licenses','keys');};
+function renderKanban(){
+ if(!snapshot)return;
+ const query=$('kanban-search').value.trim().toLocaleLowerCase(),status=$('kanban-status').value;
+ const matches=snapshot.players.filter(p=>(status==='all'||p.status===status)&&[p.id,p.label,p.kog_player,p.stats?.name,p.crm?.sales_plan,...(p.crm?.tags||[])].join(' ').toLocaleLowerCase().includes(query));
+ $('kanban-summary').textContent=`${num(matches.length)} of ${num(snapshot.players.length)} customers`;
+ $('kanban-board').innerHTML=boardStages.map(stage=>{
+  const items=matches.filter(p=>(p.crm?.stage||'customer')===stage).sort((a,b)=>(a.crm?.renewal_at||Infinity)-(b.crm?.renewal_at||Infinity)||a.label.localeCompare(b.label)||a.id-b.id);
+  const cards=items.slice(0,boardLimits[stage]).map(p=>`<article class="kanban-card" draggable="true" data-board-id="${p.id}"><div class="kanban-card-top"><span class="kanban-key">#${p.id}</span>${badge(p.status)}</div><h4>${openButton(p,p.label)}</h4><div class="kanban-card-meta"><span>${esc(p.crm?.sales_plan||p.role)}</span>${p.crm?.renewal_at?`<time datetime="${new Date(p.crm.renewal_at*1000).toISOString()}">Follow-up ${esc(date(p.crm.renewal_at))}</time>`:''}</div>${p.crm?.tags?.length?`<div class="kanban-tags">${p.crm.tags.slice(0,3).map(tag=>`<span>${esc(tag)}</span>`).join('')}</div>`:''}<label class="kanban-move">Move to<select data-board-move="${p.id}" aria-label="Move ${esc(p.label)} to stage">${selectOptions(boardStages,stage)}</select></label></article>`).join('');
+  return `<section class="kanban-column" data-board-stage="${stage}" aria-label="${esc(labelFor(stage))}, ${items.length} customers"><header><h3>${esc(labelFor(stage))}</h3><span>${num(items.length)}</span></header><div class="kanban-column-body">${cards||'<p class="kanban-empty">No customers in this stage.</p>'}${items.length>boardLimits[stage]?`<button class="kanban-more" data-board-more="${stage}">Show ${num(Math.min(40,items.length-boardLimits[stage]))} more</button>`:''}</div></section>`;
+ }).join('');
+}
+async function moveBoardCustomer(id,stage,control){
+ const customer=snapshot?.players.find(p=>p.id===id);
+ if(boardMoving||!customer||!boardStages.includes(stage)||stage===(customer.crm?.stage||'customer'))return;
+ boardMoving=true;
+ try{const result=await operate({action:'crm.stage',license_id:id,stage},control);if(!result&&snapshot)renderKanban();}
+ finally{boardMoving=false;}
+}
+const board=$('kanban-board');
+board.addEventListener('dragstart',event=>{const card=event.target.closest('[data-board-id]');if(!card||event.target.closest('select,button')||boardMoving){event.preventDefault();return;}boardDragged=Number(card.dataset.boardId);event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',String(boardDragged));card.classList.add('is-dragging');});
+board.addEventListener('dragover',event=>{const column=event.target.closest('[data-board-stage]');if(boardDragged===null||!column)return;event.preventDefault();event.dataTransfer.dropEffect='move';board.querySelectorAll('.is-drop-target').forEach(item=>item.classList.remove('is-drop-target'));column.classList.add('is-drop-target');});
+board.addEventListener('drop',event=>{const column=event.target.closest('[data-board-stage]'),id=boardDragged;boardDragged=null;board.querySelectorAll('.is-drop-target,.is-dragging').forEach(item=>item.classList.remove('is-drop-target','is-dragging'));if(!column||id===null)return;event.preventDefault();moveBoardCustomer(id,column.dataset.boardStage,column);});
+board.addEventListener('dragend',()=>{boardDragged=null;board.querySelectorAll('.is-drop-target,.is-dragging').forEach(item=>item.classList.remove('is-drop-target','is-dragging'));});
+board.addEventListener('change',event=>{const select=event.target.closest('[data-board-move]');if(select)moveBoardCustomer(Number(select.dataset.boardMove),select.value,select);});
+for(const id of ['kanban-search','kanban-status'])$(id).addEventListener(id==='kanban-search'?'input':'change',renderKanban);
 for(const id of ['license-role','license-stage'])$(id).addEventListener('change',()=>{pages.licenses=1;renderLicenses();});
 
 async function loadOverviewLedger(){
@@ -188,6 +220,7 @@ document.addEventListener('click',async event=>{
  if(button.hasAttribute('data-crm-plan')){await loadOverviewLedger();if(!sessionCurrent(run))return;editPlan(button.dataset.crmPlan?Number(button.dataset.crmPlan):null);}
  if(button.dataset.kogDownload){try{const data=await adminRequest('admin/kog/profile?player='+encodeURIComponent(button.dataset.kogDownload));if(sessionCurrent(run))downloadFile(JSON.stringify(data.profile,null,2),'novaclient-kog-profile.json','application/json');}catch(error){if(sessionCurrent(run))toast(error.message,true);}}
  if(button.dataset.keyFilter){setView('licenses');$('license-status').value=button.dataset.keyFilter;pages.licenses=1;renderLicenses();}
+ if(button.dataset.boardMore){boardLimits[button.dataset.boardMore]+=40;renderKanban();}
  if(button.dataset.finPage){financePage=Number(button.dataset.finPage);loadFinance(true);}
  if(button.dataset.incomeEdit){const entry=financeData?.entries.find(e=>e.id===Number(button.dataset.incomeEdit));if(entry)editIncome(entry);}
  if(button.dataset.incomeTrash||button.dataset.incomeRestore){const restore=Boolean(button.dataset.incomeRestore),id=Number(button.dataset.incomeTrash||button.dataset.incomeRestore);if(await confirmOperation(restore?'Restore income record?':'Move income to trash?',restore?'This record becomes visible in the active ledger again.':'This removes the record from active totals. Its history stays available in Trash.')){const result=await operate({action:restore?'finance.restore':'finance.trash',id,confirm_id:id},button);if(result)loadFinance(true);}}
