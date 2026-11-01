@@ -12,7 +12,7 @@ widgets.operations='Operations';
 widgetSubtitles.operations='Server-managed titles and KoG distribution';
 widgetRenderers.operations=()=>{
  const o=operations();
- return [['Custom titles',o.titles.length],['Assigned keys',new Set(o.assignments.map(a=>a.license_id)).size],['KoG jobs pending',o.jobs.filter(j=>['queued','running'].includes(j.state)).length],['Recent distributions',o.broadcasts.length]].map(([label,value])=>`<div class="ops-stat"><span>${label}</span><strong>${num(value)}</strong></div>`).join('')+'<button class="panel-link" data-view="titles">Open title studio →</button>';
+ return vibeComponent('flow',{clients:livePlayers().length})+[['Custom titles',o.titles.length],['Assigned keys',new Set(o.assignments.map(a=>a.license_id)).size],['KoG jobs pending',o.jobs.filter(j=>['queued','running'].includes(j.state)).length],['Recent distributions',o.broadcasts.length]].map(([label,value])=>`<div class="ops-stat"><span>${label}</span><strong>${num(value)}</strong></div>`).join('')+'<button class="panel-link" data-view="titles">Open title studio →</button>';
 };
 preferences.accent='violet';
 applyPreferences();renderToggles();

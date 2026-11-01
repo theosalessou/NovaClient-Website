@@ -180,10 +180,10 @@ function renderFinance(){
 }
 function renderIncomeCharts(){
  const code=$('finance-chart-currency').value;if(!code||!financeData){$('finance-chart').innerHTML=empty('No received income yet.','Pending entries appear in the summary.');$('finance-breakdown').replaceChildren();return;}
- const points=financeData.trend.filter(p=>p.currency===code),maximum=Math.max(1e-18,...points.map(p=>Number(p.amount)));
- $('finance-chart').innerHTML=points.length?`<div class="income-bars" role="img" aria-label="Received income by month in ${esc(code)}">${points.map(p=>`<div class="income-bar-column"><span title="${esc(moneyText(p.amount,code))}">${esc(p.amount)}</span><div class="income-bar-track"><div class="income-bar" data-bar-height="${Math.max(1,Number(p.amount)/maximum*100)}"></div></div><small>${esc(p.month)}</small></div>`).join('')}</div>`:empty('No received income in this currency.','Pending and cancelled entries are excluded from this chart.');
- for(const bar of $('finance-chart').querySelectorAll('[data-bar-height]'))bar.style.height=bar.dataset.barHeight+'%';
- const methods=financeData.methods.filter(item=>item.currency===code);$('finance-breakdown').innerHTML=methods.length?methods.map(item=>`<div class="payment-breakdown"><div><span>${esc(labelFor(item.method))}</span><strong>${esc(moneyText(item.amount,code))}</strong></div></div>`).join(''):empty('No receipts for this selection.','Record the method used when adding received income.');
+ const points=financeData.trend.filter(p=>p.currency===code).map(p=>({label:p.month,value:Number(p.amount),secondary:0}));
+ $('finance-chart').innerHTML=vibeComponent('bars',{points,series:['Received '+code,'']});
+ const methods=financeData.methods.filter(p=>p.currency===code).map(p=>({label:labelFor(p.method),count:Number(p.amount)}));
+ $('finance-breakdown').innerHTML=vibeComponent('distribution',{groups:methods,total:methods.reduce((sum,p)=>sum+p.count,0),unit:code});
 }
 $('finance-chart-currency').addEventListener('change',renderIncomeCharts);
 for(const id of ['finance-query','finance-currency','finance-method','finance-category','finance-status','finance-from','finance-to','finance-trash'])$(id).addEventListener(id==='finance-query'?'input':'change',()=>{clearTimeout(filterTimer);filterTimer=setTimeout(()=>{financePage=1;loadFinance(true);},id==='finance-query'?250:0);});
