@@ -92,3 +92,5 @@ html:not(.orbit-enhanced) .model-chapter{min-height:0;padding:32px 24px}html:not
 .download-stop.tip-pair .station-body{max-height:calc(100svh - 310px)}
 @media(max-width:799px){.download-stop.tip-pair .orbital-world .model-copy{max-height:calc(100svh - 250px);padding:16px}.download-stop.tip-pair .station-body{max-height:calc(100svh - 330px)}}
 .motion-off.download-stop .model-copy,.motion-off.download-stop .station-body{max-height:none}
+
+.tip-pair .model-copy .product-heading{margin:0 0 16px;font-size:28px;font-weight:550;line-height:1.15;letter-spacing:-.025em}.station-body .product-summary{font-size:15px;line-height:1.65;color:#eee0f7}@media(max-width:799px){.tip-pair .model-copy .product-heading{font-size:21px;margin-bottom:8px}.station-body .product-summary{font-size:14px}}
