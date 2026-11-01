@@ -86,3 +86,9 @@ html:not(.orbit-enhanced) .model-chapter{min-height:0;padding:32px 24px}html:not
 @media(max-width:799px){.model-chapter{min-height:94svh}.tip-pair .orbital-world .model-copy{max-height:calc((45svh - 52px)/2);padding:10px 14px}.tip-pair .station-body{max-height:calc((45svh - 138px)/2)}.tip-pair .station-body p{font-size:14px}.tip-pair .model-copy h3{font-size:18px}}
 .motion-off .model-chapter{min-height:0}.motion-off.tip-pair .model-copy,.motion-off.tip-pair .station-body{max-height:none}
 @media(prefers-reduced-motion:reduce){.model-chapter{min-height:0}.tip-pair .model-copy,.tip-pair .station-body{max-height:none}}
+
+/* The final station is dedicated to downloads, never paired with FAQ. */
+.download-stop.tip-pair .orbital-world .model-copy{max-height:calc(100svh - 220px);background:#100b19f0}
+.download-stop.tip-pair .station-body{max-height:calc(100svh - 310px)}
+@media(max-width:799px){.download-stop.tip-pair .orbital-world .model-copy{max-height:calc(100svh - 250px);padding:16px}.download-stop.tip-pair .station-body{max-height:calc(100svh - 330px)}}
+.motion-off.download-stop .model-copy,.motion-off.download-stop .station-body{max-height:none}
