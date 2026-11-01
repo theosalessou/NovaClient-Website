@@ -76,7 +76,7 @@ function attachText({planeBounds=null,media=null,source=null,caption='',matrix,w
   if(cards.length>4&&!visible&&card.style.visibility==='hidden')return;
   if(card.style.width!==width+'px')card.style.width=width+'px';card.style.transformOrigin='0 0';
   card.style.setProperty('--stellar-spill',String(illumination));card.style.setProperty('--stellar-angle',lightAngle+'deg');
-  let offset='';if(cards.length>4&&planeBounds){const members=cards.map((_,j)=>j).filter(j=>Math.min(7,Math.floor(j*8/cards.length))===activeTip),rank=members.indexOf(i),mobile=innerWidth<800;const x=mobile?24:rank===0?28:innerWidth-planeBounds.width-28;const y=mobile?148+rank*((innerHeight-248)/2+12):Math.max(110,innerHeight*.24);offset=`translate3d(${x-planeBounds.left}px,${y-planeBounds.top}px,0) `;}card.style.transform=offset+'matrix3d('+matrix.join(',')+')';
+  let offset='';if(cards.length>4&&planeBounds){const members=cards.map((_,j)=>j).filter(j=>Math.min(7,Math.floor(j*8/cards.length))===activeTip),rank=members.indexOf(i),mobile=innerWidth<800&&innerHeight>=560;const x=mobile?24:rank===0?28:innerWidth-planeBounds.width-28;const y=mobile?Math.max(174,innerHeight*.49)+rank*((innerHeight*.45-70)/2+10):Math.max(110,innerHeight*.24);offset=`translate3d(${x-planeBounds.left}px,${y-planeBounds.top}px,0) `;}card.style.transform=offset+'matrix3d('+matrix.join(',')+')';
   card.style.opacity=visible?'1':'0';card.style.visibility=visible?'visible':'hidden';
   card.inert=!visible;if(visible)card.removeAttribute('aria-hidden');else card.setAttribute('aria-hidden','true');
  });
@@ -84,7 +84,7 @@ function attachText({planeBounds=null,media=null,source=null,caption='',matrix,w
 async function sync(){
  if(controller){controller.setActive(enabled());pose();return;}
  if(!enabled()||loading||failed)return;loading=true;
- try{const {createEmblem}=await import('./nova-emblem.js?v=16');if(!enabled())return;controller=createEmblem(canvas,{onFrame:attachText});controller.setActive(true);pose();}
+ try{const {createEmblem}=await import('./nova-emblem.js?v=17');if(!enabled())return;controller=createEmblem(canvas,{onFrame:attachText});controller.setActive(true);pose();}
  catch(error){failed=true;wrap.classList.remove('webgl-ready');console.warn('Nova 3D unavailable; using the transparent emblem.',error);}
  finally{loading=false;}
 }

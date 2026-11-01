@@ -118,3 +118,8 @@ New orbit-scroll.js smooths vertical page wheel input with a finite RAF interpol
 
 ## 1 November — reverse-in-place inside the passage
 Transit orientation now remembers which exterior side the camera entered from. Reversing input before exiting does not turn the camera: it backs out facing its entry heading. Entry side changes only outside .44–.68. New front/rear retreat tests passed; full-crossing behavior and smoothing retained. No browser/GPU visual verification.
+
+## 1 November — mobile composition, ethereal body and non-intersecting orbits (latest)
+Compact viewports use the constrained geometry/buffer profile (512² pixel-area cap, no MSAA,<=32 dust points and no passive idle loop). Portrait composition lifts the model14svh above two lower reading planes. Landscape keeps left/right cards; responsive header,44px targets,16px native selector text, notch safe-area padding, original pinch zoom and touch scrolling preserved. Hover opacity is gated away from touch. Real mobile browser/device profiling remains required.
+
+The stellar shader now emits variable alpha (veil) using additive transparency with no depth writes instead of an opaque filled body. Ring geometry is enlarged and de-flattened, made thinner/fainter and placed on the far side of the body according to camera-local Z. Both hoops fade out in the central passage; they do not switch through the model while visible.33 source/mock-renderer geometry/lifecycle tests passed, including full vertex checks of both hoops beyond the body bounds at front/rear tip poses and mobile quality/transparency constraints. No actual shader raster/GPU/FPS validation was performed.

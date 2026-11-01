@@ -2,7 +2,8 @@ import * as THREE from './assets/vendor/three.module.js';
 import { cameraDistance, cinematicFlight } from './emblem-journey.js?v=11';
 // A transparent viewport with a bounded backing buffer, never a cropped square.
 export function createEmblem(canvas,{onFrame=()=>{}}={}){
- const constrained=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4;
+ const compact=innerWidth<800||innerHeight<560;
+ const constrained=compact||(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4;
  let budget=constrained?512:640;
  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:!constrained,powerPreference:'low-power'});
  renderer.setClearColor(0x000000,0);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -27,21 +28,22 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
   float vein=pow(.5+.5*sin(vPosition.x*8.0+vPosition.y*4.0+field*2.0-uTime*.38),7.0);
   vec3 nebula=mix(vec3(.055,.008,.12),uColor*.82,.46+field*.12+grain*.035);
   vec3 emission=nebula+vec3(.40,.15,.66)*vein*.38+vec3(.72,.46,.95)*rim*.68;
-  gl_FragColor=vec4(emission*uEnergy,1.0);
+  float veil=.10+rim*.42+vein*.16+(.5+.5*field)*.06;
+  gl_FragColor=vec4(emission*uEnergy,veil);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
- }`});
+ }`,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
  // Keep the existing damped color API while shading through an emission uniform.
  material.color=stellarUniforms.uColor.value;
- const star=new THREE.Mesh(geo,material);star.name='nova-emblem';group.add(star);
+ const star=new THREE.Mesh(geo,material);star.name='nova-emblem';star.renderOrder=2;group.add(star);
  const corona=new THREE.Mesh(geo,new THREE.ShaderMaterial({uniforms:stellarUniforms,vertexShader:stellarVertex,transparent:true,side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,fragmentShader:`
  uniform float uTime;varying vec3 vNormal;varying vec3 vView;varying vec3 vPosition;
  void main(){float edge=pow(1.0-abs(dot(normalize(vNormal),normalize(vView))),2.6);float flow=.82+.18*sin(vPosition.y*3.0+vPosition.x*2.0-uTime*.7);gl_FragColor=vec4(.51,.23,.83,edge*flow*.22);}` }));
  corona.name='stellar-corona';corona.scale.setScalar(1.065);group.add(corona);
- const ringMaterial=new THREE.MeshBasicMaterial({color:0xa974d6,transparent:true,opacity:.72});
- const ring=new THREE.Mesh(new THREE.TorusGeometry(2.65,.055,constrained?8:12,constrained?56:112),ringMaterial);ring.rotation.set(.55,.3,-.65);ring.scale.set(1.1,.62,1);group.add(ring);
- const orbitMaterial=new THREE.MeshBasicMaterial({color:0xa161c8,transparent:true,opacity:.35});
- const orbit=new THREE.Mesh(new THREE.TorusGeometry(2.98,.013,6,constrained?56:112),orbitMaterial);orbit.rotation.set(-.65,.65,.35);group.add(orbit);
+ const ringMaterial=new THREE.MeshBasicMaterial({color:0xa974d6,transparent:true,opacity:.30,depthWrite:false});
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(3.4,.028,constrained?8:12,constrained?56:112),ringMaterial);ring.rotation.set(.55,.3,-.65);ring.scale.set(1.1,.94,1);group.add(ring);
+ const orbitMaterial=new THREE.MeshBasicMaterial({color:0xa161c8,transparent:true,opacity:.20,depthWrite:false});
+ const orbit=new THREE.Mesh(new THREE.TorusGeometry(4.0,.011,6,constrained?56:112),orbitMaterial);orbit.rotation.set(-.65,.65,.35);group.add(orbit);ring.name='stellar-inner-orbit';orbit.name='stellar-outer-orbit';ring.renderOrder=orbit.renderOrder=1;
  const lightCanvas=document.createElement('canvas');lightCanvas.width=lightCanvas.height=128;
  const ctx=lightCanvas.getContext('2d');const gradient=ctx.createRadialGradient(64,64,0,64,64,64);
  gradient.addColorStop(0,'rgba(168,70,235,.32)');gradient.addColorStop(.35,'rgba(128,34,210,.12)');gradient.addColorStop(1,'rgba(72,12,116,0)');ctx.fillStyle=gradient;ctx.fillRect(0,0,128,128);
@@ -107,6 +109,11 @@ export function createEmblem(canvas,{onFrame=()=>{}}={}){
    glow.scale.set(7.2*breathing,7.2*breathing,1);
 
    group.rotation.set(current.x+Math.sin(drift*.65)*.12,current.y+Math.sin(drift*.47)*.18,current.z+Math.sin(drift*.53)*.075);ring.rotation.set(.55+Math.sin(drift*.22)*.18,.3+drift*.20,-.65+current.phase*.22+drift*.48);orbit.rotation.set(-.65+drift*.16,.65+Math.sin(drift*.28)*.28,.35+current.phase*.22-drift*.38);
+   // Both hoops remain behind the stellar body relative to the visited side.
+   const routeZ=current.flight>=0?cinematicFlight(current.flight,cameraDistance(camera.aspect)).position[2]:10;
+   const side=Math.tanh(routeZ/2),fade=Math.max(0,Math.min(1,(Math.abs(routeZ)-3)/3));
+   ring.position.z=-4.8*side;orbit.position.z=-5.3*side;
+   ringMaterial.opacity=.30*fade;orbitMaterial.opacity=.20*fade;
    // Focus is model-local, transformed after the current body rotation.
    group.updateMatrixWorld(true);
    const focus=new THREE.Vector3(current.fx,current.fy,current.fz).applyMatrix4(group.matrixWorld);

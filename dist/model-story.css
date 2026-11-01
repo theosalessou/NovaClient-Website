@@ -64,3 +64,18 @@ html:not(.orbit-enhanced) .model-chapter{min-height:0;padding:32px 24px}html:not
 @media(max-width:799px){.tip-pair .orbital-world .model-copy{max-height:calc((100svh - 248px)/2);padding:12px 16px;border-radius:10px}.tip-pair .model-copy h3{font-size:20px;margin-bottom:8px}.tip-pair .station-body{max-height:calc((100svh - 390px)/2);min-height:44px;font-size:13px}.tip-pair .station-body p{font-size:13px;line-height:1.5}}
 .motion-off.tip-pair .model-copy,.motion-off.tip-pair .station-body{max-height:none}
 @media(prefers-reduced-motion:reduce){.tip-pair .model-copy,.tip-pair .station-body{max-height:none}}
+
+/* Mobile composition: star above, two quiet reading planes below, no notch collisions. */
+@media(max-width:799px){
+ .site-header.frame{padding:calc(10px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left));min-height:0;gap:6px}.site-header .brand{font-size:18px}.site-header .header-actions{gap:6px}.site-header .discord-signin{font-size:12px;min-height:44px;padding:8px}.site-header .header-download{font-size:12px;min-height:44px;padding:8px 12px}.site-header .icon-nav{gap:8px}.site-header .icon-nav a{width:44px;height:44px}
+ .tip-pair .scene-wrap.scene-traveller{transform:translate3d(0,-14svh,0)!important}
+ .tip-pair .orbital-world .model-copy{max-height:calc((45svh - 70px)/2);padding:10px 14px;background:#100b19e8;box-shadow:none;border-radius:10px}.tip-pair .model-copy h3{font-size:18px;line-height:1.25;margin-bottom:7px}.tip-pair .station-body{max-height:calc((45svh - 160px)/2);min-height:30px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}.tip-pair .station-body p{font-size:14px;line-height:1.55}.tip-pair .station-body .atlas-image img{max-height:120px}
+ .model-chapter-nav{top:calc(112px + env(safe-area-inset-top));bottom:auto;max-width:calc(100vw - 24px);gap:4px}.model-chapter-nav select{font-size:16px;max-width:calc(100vw - 132px)}.model-chapter-nav button{min-width:44px}
+ #motion-toggle{bottom:calc(10px + env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));font-size:12px}
+ html:not(.atlas-open) #orbit-image-focus{inset:calc(112px + env(safe-area-inset-top)) 12px calc(68px + env(safe-area-inset-bottom));padding:16px;box-shadow:none}
+ a,button,summary,select{touch-action:manipulation}button,select{-webkit-user-select:none;user-select:none}
+}
+@media(hover:none){.atlas-image:hover img{opacity:1}.button:hover{transform:none}}
+@media(max-width:799px) and (orientation:landscape){.tip-pair .scene-wrap.scene-traveller{transform:translateZ(0)!important}.model-chapter-nav{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));max-width:calc(100vw - 260px)}.site-header .icon-nav{display:none}.tip-pair .orbital-world .model-copy{max-height:calc(100svh - 160px)}.tip-pair .station-body{max-height:calc(100svh - 225px)}}
+.motion-off.tip-pair .scene-wrap.scene-traveller{transform:translateZ(0)!important}.motion-off.tip-pair .model-copy,.motion-off.tip-pair .station-body{max-height:none}
+@media(prefers-reduced-motion:reduce){.tip-pair .model-copy,.tip-pair .station-body{max-height:none}}
