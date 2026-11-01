@@ -14,7 +14,7 @@ function schedule(){if(!frame)frame=requestAnimationFrame(paint)}
 const observer=new IntersectionObserver(items=>{for(const item of items){const e=entries.get(item.target);if(e)e.visible=item.isIntersecting}schedule()});
 function attach(root,title){observer.unobserve(root);entries.delete(root);root.replaceChildren();root.hidden=!title;if(!title)return;
  root.classList.add('player-title');root.setAttribute('aria-label',title.name);
- const spans=Array.from(title.name,c=>{const s=document.createElement('span');s.textContent=c===' '?'\u00a0':c;s.setAttribute('aria-hidden','true');root.append(s);return s});
+ const spans=Array.from(title.name,c=>{const s=document.createElement('span');s.textContent=c===' '?'\u00a0':c;s.setAttribute('aria-hidden','true');if(title.glow)s.style.textShadow='0 0 .18em currentColor, 0 0 .34em currentColor';root.append(s);return s});
  const rgb=c=>[c>>16&255,c>>8&255,c&255];entries.set(root,{title,spans,a:rgb(title.color1),b:rgb(title.color2),visible:true});observer.observe(root);schedule();}
 window.NovaTitles={attach,get paused(){return paused},pause(value){paused=value;cancelAnimationFrame(frame);frame=0;schedule()}};
 reduced.addEventListener('change',e=>window.NovaTitles.pause(e.matches));
