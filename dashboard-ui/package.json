@@ -7,12 +7,13 @@
     "test": "node test-ui.cjs"
   },
   "dependencies": {
+    "motion": "^14.9.1",
     "react": "19.2.5",
     "react-dom": "19.2.5"
   },
   "devDependencies": {
     "@esbuild/win32-x64": "0.25.12",
-    "jsdom": "26.1.0",
-    "css-tree": "3.1.0"
+    "css-tree": "3.1.0",
+    "jsdom": "26.1.0"
   }
 }
