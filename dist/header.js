@@ -31,6 +31,6 @@ window.addEventListener('storage',event=>{if(event.key==='nova-session')identity
 document.addEventListener('nova-session-changed',identity);
 window.addEventListener('pageshow',identity);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)identity()});
-for(const link of document.querySelectorAll('.site-header .icon-nav a')){const url=new URL(link.href);if(!url.hash&&url.pathname.replace(/\/$/,'')===location.pathname.replace(/\/$/,''))link.setAttribute('aria-current','page')}
+for(const link of document.querySelectorAll('.site-header .icon-nav a, .nova-nav a')){const url=new URL(link.href);if(!url.hash&&url.pathname.replace(/\/$/,'')===location.pathname.replace(/\/$/,''))link.setAttribute('aria-current','page')}
 identity();
 })();

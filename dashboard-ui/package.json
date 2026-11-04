@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node test-ui.cjs"
+    "test": "node test-ui.cjs",
+    "test:site": "node test-interactive-site.cjs"
   },
   "dependencies": {
     "motion": "^14.9.1",
